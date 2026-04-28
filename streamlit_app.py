@@ -3,26 +3,43 @@ import streamlit as st
 st.set_page_config(page_title="PCCT Intelligent", layout="centered")
 
 st.title("🧠 Système embarqué intelligent - PCCT")
-st.write("Simulation d’un système embarqué pour personnalisation de dose et maintenance préventive")
+st.write("Simulation temps réel pour optimisation de dose et maintenance préventive")
 
-st.subheader("🧾 Données saisies par le technicien")
+# ---------------------------
+# Fonction sécurisée
+# ---------------------------
+def safe_float(value, default):
+    try:
+        return float(value)
+    except:
+        return default
 
-age = st.number_input("Âge du patient", min_value=0, max_value=120, value=45)
+# ---------------------------
+# Entrée technicien (clavier)
+# ---------------------------
+st.subheader("🧾 Données patient (saisie clavier)")
+
+age = safe_float(st.text_input("Âge", "45"), 45)
 sexe = st.selectbox("Sexe", ["F", "M"])
-poids = st.number_input("Poids (kg)", min_value=1.0, max_value=250.0, value=70.0)
-taille_cm = st.number_input("Taille (cm)", min_value=50.0, max_value=230.0, value=170.0)
+poids = safe_float(st.text_input("Poids (kg)", "70"), 70)
+taille_cm = safe_float(st.text_input("Taille (cm)", "170"), 170)
 
 st.subheader("⚙️ Paramètres d’acquisition")
-mas = st.number_input("mAs", min_value=1.0, max_value=500.0, value=80.0)
+
+mas = safe_float(st.text_input("mAs", "80"), 80)
 kvp = st.selectbox("kVp", [80, 100, 120, 140])
-artefacts = st.selectbox("Artefacts visibles ?", ["Non", "Oui"])
+artefacts = st.selectbox("Artefacts présents ?", ["Non", "Oui"])
 artefacts_num = 1 if artefacts == "Oui" else 0
 
+# ---------------------------
 # Calcul IMC
+# ---------------------------
 taille_m = taille_cm / 100
-imc = poids / (taille_m ** 2)
+imc = poids / (taille_m ** 2) if taille_m > 0 else 0
 
+# ---------------------------
 # Classe IMC + SNR initial
+# ---------------------------
 if imc < 20:
     imc_classe = "<20"
     snr_initial = 65.68
@@ -36,18 +53,23 @@ else:
     imc_classe = ">30"
     snr_initial = 59.03
 
-# Estimation SNR simulée
-# Logique : IMC élevé ↓ SNR, artefacts ↓ SNR, mAs ↑ SNR, kVp influence modérée
+# ---------------------------
+# SNR estimé (simulation)
+# ---------------------------
 facteur_mas = (mas / 80) ** 0.5
 facteur_kvp = kvp / 120
+
 penalite_imc = max(0, (imc - 25) * 0.45)
 penalite_artefacts = 6 if artefacts == "Oui" else 0
 penalite_age = max(0, (age - 60) * 0.03)
 
-snr = snr_initial * facteur_mas * (0.95 + 0.05 * facteur_kvp) - penalite_imc - penalite_artefacts - penalite_age
+snr = snr_initial * facteur_mas * (0.95 + 0.05 * facteur_kvp)
+snr = snr - penalite_imc - penalite_artefacts - penalite_age
 snr = max(20, min(snr, 80))
 
+# ---------------------------
 # Indicateurs
+# ---------------------------
 delta_snr = snr - snr_initial
 dose_snr_ratio = mas / snr if snr != 0 else 0
 
@@ -62,7 +84,9 @@ stress_score = (
     0.1 * artefacts_num
 )
 
+# ---------------------------
 # Décision
+# ---------------------------
 if snr >= 60:
     decision = "Conserver ou réduire la dose"
 elif snr >= 50 and delta_snr >= -5 and stress_score < 0.5:
@@ -74,7 +98,9 @@ elif snr < 45 and stress_score >= 0.6:
 else:
     decision = "Ajustement léger mAs si nécessaire"
 
-# mAs corrigé
+# ---------------------------
+# Correction dose
+# ---------------------------
 if decision == "Conserver ou réduire la dose":
     mas_corrige = mas * 0.95
 elif decision == "Ajustement léger mAs si nécessaire":
@@ -89,7 +115,9 @@ elif mas_corrige == mas:
 else:
     impact_dose = "Dose légèrement augmentée"
 
-# État système
+# ---------------------------
+# Etat système
+# ---------------------------
 if decision == "Conserver ou réduire la dose":
     etat = "🟢 Stable"
 elif decision == "Recalibration avant ajustement":
@@ -99,6 +127,9 @@ elif decision == "Ajustement léger mAs si nécessaire":
 else:
     etat = "🔴 Critique"
 
+# ---------------------------
+# Affichage
+# ---------------------------
 st.subheader("📊 Résultats calculés automatiquement")
 
 col1, col2, col3 = st.columns(3)
@@ -116,6 +147,7 @@ col7.metric("Dose/SNR ratio", round(dose_snr_ratio, 2))
 col8.metric("mAs corrigé", round(mas_corrige, 2))
 
 st.subheader("🔍 Analyse embarquée")
+
 if "Stable" in etat:
     st.success(etat)
 elif "Dégradé" in etat:
@@ -131,12 +163,13 @@ st.write(decision)
 st.subheader("💉 Impact sur la dose")
 st.write(impact_dose)
 
-st.subheader("🚨 Alerte opérateur")
+st.subheader("🚨 Alerte")
+
 if "Maintenance" in decision:
-    st.error("⚠️ Maintenance prioritaire : ne pas augmenter la dose.")
+    st.error("⚠️ Maintenance prioritaire requise")
 elif "Recalibration" in decision:
-    st.warning("⚠️ Recalibration recommandée avant ajustement.")
+    st.warning("⚠️ Recalibration recommandée")
 elif "Ajustement" in decision:
-    st.info("ℹ️ Ajustement léger du mAs possible.")
+    st.info("ℹ️ Ajustement léger possible")
 else:
-    st.success("✅ Système stable : dose maintenue ou réduite.")
+    st.success("✅ Système stable")
