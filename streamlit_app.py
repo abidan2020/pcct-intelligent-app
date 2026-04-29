@@ -1,9 +1,11 @@
 import streamlit as st
+import numpy as np
+import matplotlib.pyplot as plt
 
-st.set_page_config(page_title="PCCT Intelligent", layout="centered")
+st.set_page_config(page_title="PCCT Intelligent", layout="wide")
 
 st.title("🧠 Système embarqué intelligent - PCCT")
-st.write("Simulation temps réel pour optimisation de dose et maintenance préventive")
+st.write("Optimisation intelligente de dose + maintenance prédictive")
 
 # ---------------------------
 # Fonction sécurisée
@@ -15,161 +17,126 @@ def safe_float(value, default):
         return default
 
 # ---------------------------
-# Entrée technicien (clavier)
+# Interface 2 colonnes
 # ---------------------------
-st.subheader("🧾 Données patient (saisie clavier)")
-
-age = safe_float(st.text_input("Âge", "45"), 45)
-sexe = st.selectbox("Sexe", ["F", "M"])
-poids = safe_float(st.text_input("Poids (kg)", "70"), 70)
-taille_cm = safe_float(st.text_input("Taille (cm)", "170"), 170)
-
-st.subheader("⚙️ Paramètres d’acquisition")
-
-mas = safe_float(st.text_input("mAs", "80"), 80)
-kvp = st.selectbox("kVp", [80, 100, 120, 140])
-artefacts = st.selectbox("Artefacts présents ?", ["Non", "Oui"])
-artefacts_num = 1 if artefacts == "Oui" else 0
+col1, col2 = st.columns(2)
 
 # ---------------------------
-# Calcul IMC
+# Entrées technicien
 # ---------------------------
-taille_m = taille_cm / 100
-imc = poids / (taille_m ** 2) if taille_m > 0 else 0
+with col1:
+    st.subheader("🧾 Données patient")
 
-# ---------------------------
-# Classe IMC + SNR initial
-# ---------------------------
-if imc < 20:
-    imc_classe = "<20"
-    snr_initial = 65.68
-elif imc < 25:
-    imc_classe = "20-25"
-    snr_initial = 60.48
-elif imc < 30:
-    imc_classe = "25-30"
-    snr_initial = 61.02
-else:
-    imc_classe = ">30"
-    snr_initial = 59.03
+    age = safe_float(st.text_input("Âge", "45"), 45)
+    sexe = st.selectbox("Sexe", ["F", "M"])
+    poids = safe_float(st.text_input("Poids (kg)", "70"), 70)
+    taille_cm = safe_float(st.text_input("Taille (cm)", "170"), 170)
+
+    st.subheader("⚙️ Acquisition")
+
+    mas = safe_float(st.text_input("mAs", "80"), 80)
+    kvp = st.selectbox("kVp", [80, 100, 120, 140])
+    artefacts = st.selectbox("Artefacts", ["Non", "Oui"])
 
 # ---------------------------
-# SNR estimé (simulation)
+# Bouton calcul
 # ---------------------------
-facteur_mas = (mas / 80) ** 0.5
-facteur_kvp = kvp / 120
-
-penalite_imc = max(0, (imc - 25) * 0.45)
-penalite_artefacts = 6 if artefacts == "Oui" else 0
-penalite_age = max(0, (age - 60) * 0.03)
-
-snr = snr_initial * facteur_mas * (0.95 + 0.05 * facteur_kvp)
-snr = snr - penalite_imc - penalite_artefacts - penalite_age
-snr = max(20, min(snr, 80))
+calculer = st.button("🔍 Calculer")
 
 # ---------------------------
-# Indicateurs
+# Calcul seulement si bouton cliqué
 # ---------------------------
-delta_snr = snr - snr_initial
-dose_snr_ratio = mas / snr if snr != 0 else 0
+if calculer:
 
-snr_norm = min(max((snr - 35) / (70 - 35), 0), 1)
-imc_norm = min(max((imc - 18) / (40 - 18), 0), 1)
-mas_norm = min(max((mas - 20) / (200 - 20), 0), 1)
+    artefacts_num = 1 if artefacts == "Oui" else 0
+    taille_m = taille_cm / 100
+    imc = poids / (taille_m ** 2) if taille_m > 0 else 0
 
-stress_score = (
-    0.4 * (1 - snr_norm) +
-    0.3 * imc_norm +
-    0.2 * mas_norm +
-    0.1 * artefacts_num
-)
+    # Classe IMC
+    if imc < 20:
+        snr_initial = 65.68
+    elif imc < 25:
+        snr_initial = 60.48
+    elif imc < 30:
+        snr_initial = 61.02
+    else:
+        snr_initial = 59.03
 
-# ---------------------------
-# Décision
-# ---------------------------
-if snr >= 60:
-    decision = "Conserver ou réduire la dose"
-elif snr >= 50 and delta_snr >= -5 and stress_score < 0.5:
-    decision = "Conserver ou réduire la dose"
-elif snr >= 45:
-    decision = "Recalibration avant ajustement"
-elif snr < 45 and stress_score >= 0.6:
-    decision = "Maintenance prioritaire (pas augmentation dose)"
-else:
-    decision = "Ajustement léger mAs si nécessaire"
+    # SNR estimé
+    snr = snr_initial * (mas / 80)**0.5 * (kvp / 120)
+    snr -= max(0, (imc - 25) * 0.4)
+    snr -= 5 if artefacts == "Oui" else 0
+    snr = max(20, min(snr, 80))
 
-# ---------------------------
-# Correction dose
-# ---------------------------
-if decision == "Conserver ou réduire la dose":
-    mas_corrige = mas * 0.95
-elif decision == "Ajustement léger mAs si nécessaire":
-    mas_corrige = mas * 1.05
-else:
-    mas_corrige = mas
+    delta_snr = snr - snr_initial
 
-if mas_corrige < mas:
-    impact_dose = "Dose réduite"
-elif mas_corrige == mas:
-    impact_dose = "Dose maintenue"
-else:
-    impact_dose = "Dose légèrement augmentée"
+    # Normalisation
+    snr_norm = min(max((snr - 35) / 35, 0), 1)
+    imc_norm = min(max((imc - 18) / 22, 0), 1)
+    mas_norm = min(max((mas - 20) / 180, 0), 1)
 
-# ---------------------------
-# Etat système
-# ---------------------------
-if decision == "Conserver ou réduire la dose":
-    etat = "🟢 Stable"
-elif decision == "Recalibration avant ajustement":
-    etat = "🟡 Dégradé"
-elif decision == "Ajustement léger mAs si nécessaire":
-    etat = "🟠 Surveillance"
-else:
-    etat = "🔴 Critique"
+    # Stress score
+    stress = (
+        0.4 * (1 - snr_norm) +
+        0.3 * imc_norm +
+        0.2 * mas_norm +
+        0.1 * artefacts_num
+    )
 
-# ---------------------------
-# Affichage
-# ---------------------------
-st.subheader("📊 Résultats calculés automatiquement")
+    # Health index (NOUVEAU 🔥)
+    health_index = (1 - stress) * 100
 
-col1, col2, col3 = st.columns(3)
-col1.metric("IMC", round(imc, 2))
-col2.metric("Classe IMC", imc_classe)
-col3.metric("SNR estimé", round(snr, 2))
+    # Décision
+    if snr >= 60:
+        decision = "Conserver ou réduire la dose"
+    elif snr >= 45:
+        decision = "Recalibration avant ajustement"
+    elif stress > 0.6:
+        decision = "Maintenance prioritaire"
+    else:
+        decision = "Ajustement léger mAs"
 
-col4, col5, col6 = st.columns(3)
-col4.metric("SNR initial", round(snr_initial, 2))
-col5.metric("Delta SNR", round(delta_snr, 2))
-col6.metric("Stress score", round(stress_score, 2))
+    # ---------------------------
+    # Affichage
+    # ---------------------------
+    with col2:
+        st.subheader("📊 Résultats")
 
-col7, col8 = st.columns(2)
-col7.metric("Dose/SNR ratio", round(dose_snr_ratio, 2))
-col8.metric("mAs corrigé", round(mas_corrige, 2))
+        st.metric("IMC", round(imc, 2))
+        st.metric("SNR estimé", round(snr, 2))
+        st.metric("Delta SNR", round(delta_snr, 2))
+        st.metric("Stress score", round(stress, 2))
 
-st.subheader("🔍 Analyse embarquée")
+        # Health index 🔥
+        st.subheader("💚 Health Index")
+        st.progress(int(health_index))
+        st.write(f"{round(health_index,2)} %")
 
-if "Stable" in etat:
-    st.success(etat)
-elif "Dégradé" in etat:
-    st.warning(etat)
-elif "Surveillance" in etat:
-    st.info(etat)
-else:
-    st.error(etat)
+        # Etat
+        if health_index > 70:
+            st.success("🟢 Système sain")
+        elif health_index > 40:
+            st.warning("🟡 Surveillance")
+        else:
+            st.error("🔴 Système critique")
 
-st.subheader("⚙️ Décision du système")
-st.write(decision)
+        # Décision
+        st.subheader("⚙️ Décision")
+        st.write(decision)
 
-st.subheader("💉 Impact sur la dose")
-st.write(impact_dose)
+        # ---------------------------
+        # Graphique SNR 🔥
+        # ---------------------------
+        st.subheader("📈 Analyse SNR")
 
-st.subheader("🚨 Alerte")
+        x = np.linspace(0, 100, 100)
+        y = x
 
-if "Maintenance" in decision:
-    st.error("⚠️ Maintenance prioritaire requise")
-elif "Recalibration" in decision:
-    st.warning("⚠️ Recalibration recommandée")
-elif "Ajustement" in decision:
-    st.info("ℹ️ Ajustement léger possible")
-else:
-    st.success("✅ Système stable")
+        fig, ax = plt.subplots()
+        ax.plot(x, y)
+        ax.axvline(snr, linestyle="--")
+        ax.set_title("Position du SNR")
+        ax.set_xlabel("Qualité image")
+        ax.set_ylabel("SNR")
+
+        st.pyplot(fig)
