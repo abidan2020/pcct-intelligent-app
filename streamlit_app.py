@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 st.set_page_config(page_title="PCCT Intelligent", layout="wide")
 
 st.title("🧠 Système embarqué intelligent - PCCT")
-st.write("Optimisation intelligente de dose + maintenance prédictive")
+st.write("Optimisation de dose + maintenance préventive")
 
 # ---------------------------
 # Fonction sécurisée
@@ -17,13 +17,10 @@ def safe_float(value, default):
         return default
 
 # ---------------------------
-# Interface 2 colonnes
+# Interface
 # ---------------------------
 col1, col2 = st.columns(2)
 
-# ---------------------------
-# Entrées technicien
-# ---------------------------
 with col1:
     st.subheader("🧾 Données patient")
 
@@ -32,19 +29,17 @@ with col1:
     poids = safe_float(st.text_input("Poids (kg)", "70"), 70)
     taille_cm = safe_float(st.text_input("Taille (cm)", "170"), 170)
 
-    st.subheader("⚙️ Acquisition")
+    st.subheader("⚙️ Paramètres acquisition")
 
     mas = safe_float(st.text_input("mAs", "80"), 80)
     kvp = st.selectbox("kVp", [80, 100, 120, 140])
     artefacts = st.selectbox("Artefacts", ["Non", "Oui"])
 
-# ---------------------------
-# Bouton calcul
-# ---------------------------
+# Bouton
 calculer = st.button("🔍 Calculer")
 
 # ---------------------------
-# Calcul seulement si bouton cliqué
+# Calcul
 # ---------------------------
 if calculer:
 
@@ -52,7 +47,7 @@ if calculer:
     taille_m = taille_cm / 100
     imc = poids / (taille_m ** 2) if taille_m > 0 else 0
 
-    # Classe IMC
+    # SNR initial selon IMC
     if imc < 20:
         snr_initial = 65.68
     elif imc < 25:
@@ -75,7 +70,7 @@ if calculer:
     imc_norm = min(max((imc - 18) / 22, 0), 1)
     mas_norm = min(max((mas - 20) / 180, 0), 1)
 
-    # Stress score
+    # Stress
     stress = (
         0.4 * (1 - snr_norm) +
         0.3 * imc_norm +
@@ -83,8 +78,8 @@ if calculer:
         0.1 * artefacts_num
     )
 
-    # Health index (NOUVEAU 🔥)
-    health_index = (1 - stress) * 100
+    # Health index
+    health = (1 - stress) * 100
 
     # Décision
     if snr >= 60:
@@ -107,25 +102,25 @@ if calculer:
         st.metric("Delta SNR", round(delta_snr, 2))
         st.metric("Stress score", round(stress, 2))
 
-        # Health index 🔥
+        # Health
         st.subheader("💚 Health Index")
-        st.progress(int(health_index))
-        st.write(f"{round(health_index,2)} %")
+        st.progress(int(health))
+        st.write(f"{round(health,2)} %")
 
         # Etat
-        if health_index > 70:
+        if health > 70:
             st.success("🟢 Système sain")
-        elif health_index > 40:
+        elif health > 40:
             st.warning("🟡 Surveillance")
         else:
-            st.error("🔴 Système critique")
+            st.error("🔴 Critique")
 
         # Décision
         st.subheader("⚙️ Décision")
         st.write(decision)
 
         # ---------------------------
-        # Graphique SNR 🔥
+        # Graphique
         # ---------------------------
         st.subheader("📈 Analyse SNR")
 
@@ -136,7 +131,7 @@ if calculer:
         ax.plot(x, y)
         ax.axvline(snr, linestyle="--")
         ax.set_title("Position du SNR")
-        ax.set_xlabel("Qualité image")
+        ax.set_xlabel("Qualité")
         ax.set_ylabel("SNR")
 
         st.pyplot(fig)
