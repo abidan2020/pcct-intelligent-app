@@ -25,7 +25,7 @@ def set_bg(path):
         .stApp {{
             background:
             linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.85)),
-            url("data:image/jpg;base64,{img}");
+            url("data:image/png;base64,{img}");
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -85,7 +85,7 @@ menu = st.sidebar.radio("Menu",[
 # ACCUEIL
 # =========================
 if menu=="Accueil":
-    set_bg("images/accueil.jpg")
+    set_bg("images/accueil.png")
 
     st.title("PCCT Intelligent System")
     st.write("Optimisation dose + suivi scanner")
@@ -94,7 +94,7 @@ if menu=="Accueil":
 # TECHNICIEN
 # =========================
 elif menu=="Technicien":
-    set_bg("images/technicien.jpg")
+    set_bg("images/technicien.png")
 
     st.title("Espace Technicien")
 
@@ -126,7 +126,7 @@ elif menu=="Technicien":
 # SNR
 # =========================
 elif menu=="SNR":
-    set_bg("images/snr.jpg")
+    set_bg("images/snr.png")
 
     st.title("Analyse SNR")
 
@@ -143,7 +143,7 @@ elif menu=="SNR":
 # SUIVI
 # =========================
 elif menu=="Suivi":
-    set_bg("images/suivi.jpg")
+    set_bg("images/suivi.png")
 
     st.title("Suivi Scanner")
 
@@ -159,7 +159,7 @@ elif menu=="Suivi":
 # MAINTENANCE
 # =========================
 elif menu=="Maintenance":
-    set_bg("images/maintenance.jpg")
+    set_bg("images/maintenance.png")
 
     st.title("Maintenance prédictive")
     st.warning("Analyse en cours...")
@@ -168,7 +168,7 @@ elif menu=="Maintenance":
 # RAPPORT
 # =========================
 elif menu=="Rapport":
-    set_bg("images/rapport.jpg")
+    set_bg("images/rapport.png")
 
     st.title("Rapport")
 
