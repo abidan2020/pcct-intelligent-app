@@ -7,6 +7,9 @@ import os
 
 st.set_page_config(page_title="PCCT Intelligent System", page_icon="🧠", layout="wide")
 
+# =========================
+# BACKGROUND BASE64
+# =========================
 def get_base64_image(image_path):
     if not os.path.exists(image_path):
         st.warning(f"Image introuvable : {image_path}")
@@ -21,7 +24,7 @@ def set_background(image_path):
         <style>
         .stApp {{
             background:
-            linear-gradient(rgba(3,10,20,0.48), rgba(3,10,20,0.82)),
+            linear-gradient(rgba(3,10,20,0.50), rgba(3,10,20,0.86)),
             url("data:image/png;base64,{img_base64}");
             background-size: cover;
             background-position: center;
@@ -31,6 +34,9 @@ def set_background(image_path):
         </style>
         """, unsafe_allow_html=True)
 
+# =========================
+# STYLE
+# =========================
 st.markdown("""
 <style>
 [data-testid="stSidebar"] {
@@ -43,16 +49,6 @@ h1 { color: white; font-size: 42px; font-weight: 900; }
 h2, h3 { color: #22d3ee; }
 p, label, span, div { color: #f8fafc; }
 
-.pcct-title {
-    font-size: 72px;
-    font-weight: 900;
-    color: white;
-}
-.pcct-subtitle {
-    font-size: 28px;
-    color: #22d3ee;
-    font-weight: 800;
-}
 .card {
     background: rgba(5, 20, 35, 0.82);
     backdrop-filter: blur(14px);
@@ -62,18 +58,28 @@ p, label, span, div { color: #f8fafc; }
     box-shadow: 0 0 28px rgba(34, 211, 238, 0.16);
     margin-bottom: 18px;
 }
+
 .green-card {
     background: rgba(0, 80, 55, 0.45);
     border: 1px solid rgba(34, 197, 94, 0.45);
     border-radius: 16px;
     padding: 18px;
 }
+
 .warning-card {
     background: rgba(95, 65, 0, 0.45);
     border: 1px solid rgba(250, 204, 21, 0.45);
     border-radius: 16px;
     padding: 18px;
 }
+
+[data-testid="stMetric"] {
+    background: rgba(5, 20, 35, 0.84);
+    border: 1px solid rgba(34, 211, 238, 0.25);
+    border-radius: 18px;
+    padding: 18px;
+}
+
 .stButton>button, .stDownloadButton>button {
     background: linear-gradient(135deg, #0891b2, #7c3aed);
     color: white;
@@ -82,13 +88,11 @@ p, label, span, div { color: #f8fafc; }
     padding: 12px 28px;
     font-weight: 800;
 }
-[data-testid="stMetric"] {
-    background: rgba(5, 20, 35, 0.84);
-    border: 1px solid rgba(34, 211, 238, 0.25);
-    border-radius: 18px;
-    padding: 18px;
-}
-.stTextInput input, .stNumberInput input, .stSelectbox div, textarea {
+
+.stTextInput input,
+.stNumberInput input,
+.stSelectbox div,
+textarea {
     background-color: rgba(5, 20, 35, 0.92) !important;
     color: white !important;
     border-radius: 10px !important;
@@ -96,6 +100,9 @@ p, label, span, div { color: #f8fafc; }
 </style>
 """, unsafe_allow_html=True)
 
+# =========================
+# CALCULS
+# =========================
 def calcul_imc(poids, taille_cm):
     return poids / ((taille_cm / 100) ** 2)
 
@@ -131,6 +138,9 @@ def etat_scanner(snr, temperature, erreurs, jours):
         return score, "À SURVEILLER", "warning"
     return score, "RISQUE ÉLEVÉ", "error"
 
+# =========================
+# MENU
+# =========================
 st.sidebar.markdown("## PCCT")
 st.sidebar.markdown("##### INTELLIGENT SYSTEM")
 
@@ -155,33 +165,40 @@ st.sidebar.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
+# =========================
+# ACCUEIL
+# =========================
 if menu == "🏠 Accueil":
     set_background("images/accueil.png")
 
     st.markdown("""
     <br><br>
-    <div class="pcct-title">PCCT</div>
-    <div class="pcct-subtitle">INTELLIGENT SYSTEM</div>
-    <br>
-    <h3>Optimisation de la dose patient<br>et suivi intelligent de l’état du scanner PCCT</h3>
+    <h1 style="font-size:72px;">PCCT</h1>
+    <h2>INTELLIGENT SYSTEM</h2>
+    <h3>Optimisation de la dose patient et suivi intelligent de l’état du scanner PCCT</h3>
     """, unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
+
     with col1:
         st.markdown("""
         <div class="card">
         <h3>👨‍⚕️ Pour les Techniciens</h3>
-        <p>Optimisez chaque examen en fonction du patient pour assurer la meilleure qualité d’image avec la dose la plus faible possible.</p>
+        <p>Optimisation de chaque examen en fonction du patient pour garder une bonne qualité d’image avec une dose minimale.</p>
         </div>
         """, unsafe_allow_html=True)
+
     with col2:
         st.markdown("""
         <div class="card">
         <h3>🛠️ Pour le Service Après-Vente</h3>
-        <p>Suivez l’état du scanner PCCT et anticipez les pannes grâce à l’intelligence artificielle.</p>
+        <p>Suivi de l’état du scanner PCCT, surveillance des anomalies et aide à la maintenance prédictive.</p>
         </div>
         """, unsafe_allow_html=True)
 
+# =========================
+# TECHNICIEN
+# =========================
 elif menu == "👩‍🔧 Espace Technicien":
     set_background("images/technicien.png")
 
@@ -204,6 +221,7 @@ elif menu == "👩‍🔧 Espace Technicien":
         taille = st.number_input("Taille (cm)", 100.0, 220.0, 165.0)
         region = st.selectbox("Région anatomique", ["Abdomen", "Thorax", "Crâne", "Cardiaque"])
         protocole = st.selectbox("Protocole", ["Standard", "Faible dose", "Haute résolution"])
+
         st.markdown('</div>', unsafe_allow_html=True)
 
     imc = calcul_imc(poids, taille)
@@ -213,10 +231,12 @@ elif menu == "👩‍🔧 Espace Technicien":
     with col2:
         st.markdown('<div class="card">', unsafe_allow_html=True)
         st.subheader("Résultats Automatiques")
+
         c1, c2, c3 = st.columns(3)
         c1.metric("IMC", f"{imc:.1f}", categorie_imc(imc))
         c2.metric("Dose optimale", f"{dose} mGy")
         c3.metric("SNR estimé", f"{snr}")
+
         st.markdown('</div>', unsafe_allow_html=True)
 
         if snr >= 50:
@@ -234,6 +254,9 @@ elif menu == "👩‍🔧 Espace Technicien":
             </div>
             """, unsafe_allow_html=True)
 
+# =========================
+# QUALITÉ IMAGE
+# =========================
 elif menu == "📊 Qualité Image SNR":
     set_background("images/snr.png")
 
@@ -244,30 +267,43 @@ elif menu == "📊 Qualité Image SNR":
 
     with col1:
         st.markdown('<div class="card">', unsafe_allow_html=True)
+
         imc_test = st.slider("IMC", 15, 45, 27)
         age_test = st.slider("Âge", 10, 90, 45)
         dose_actuelle = st.slider("Dose actuelle (mGy)", 2.0, 15.0, 8.2)
+
         snr_actuel = calcul_snr(age_test, imc_test, dose_actuelle)
+
         st.metric("SNR actuel", snr_actuel, "Acceptable" if snr_actuel >= 50 else "Faible")
         st.metric("Dose actuelle", f"{dose_actuelle} mGy")
+
         st.markdown('</div>', unsafe_allow_html=True)
 
     with col2:
         doses = np.linspace(2, 15, 25)
         snr_values = [calcul_snr(age_test, imc_test, d) for d in doses]
-        df = pd.DataFrame({"Dose (mGy)": doses, "SNR estimé": snr_values})
+
+        df = pd.DataFrame({
+            "Dose (mGy)": doses,
+            "SNR estimé": snr_values
+        })
 
         st.markdown('<div class="card">', unsafe_allow_html=True)
         st.subheader("Courbe Dose vs SNR")
         st.line_chart(df.set_index("Dose (mGy)"))
+
         st.markdown("""
         **Interprétation :**  
         🟢 SNR ≥ 50 : qualité acceptable  
         🟡 40 ≤ SNR < 50 : qualité moyenne  
         🔴 SNR < 40 : qualité insuffisante
         """)
+
         st.markdown('</div>', unsafe_allow_html=True)
 
+# =========================
+# SUIVI SCANNER
+# =========================
 elif menu == "🛠️ Suivi Scanner PCCT":
     set_background("images/suivi.png")
 
@@ -296,14 +332,19 @@ elif menu == "🛠️ Suivi Scanner PCCT":
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.subheader("État global du scanner")
     st.metric(etat, f"{score}/100")
+
     if niveau == "success":
         st.success("✅ Le scanner fonctionne normalement.")
     elif niveau == "warning":
         st.warning("⚠️ Certaines valeurs nécessitent une surveillance.")
     else:
         st.error("🚨 Risque de panne élevé.")
+
     st.markdown('</div>', unsafe_allow_html=True)
 
+# =========================
+# MAINTENANCE
+# =========================
 elif menu == "🔮 Maintenance Prédictive":
     set_background("images/maintenance.png")
 
@@ -327,6 +368,7 @@ elif menu == "🔮 Maintenance Prédictive":
     with col2:
         st.markdown('<div class="card">', unsafe_allow_html=True)
         st.subheader("Points d’attention")
+
         if snr_moyen < 50:
             st.write("⚠️ SNR en baisse progressive")
         if temperature > 75:
@@ -337,6 +379,7 @@ elif menu == "🔮 Maintenance Prédictive":
             st.write("⚠️ Maintenance préventive à prévoir")
         if snr_moyen >= 50 and temperature <= 75 and erreurs < 5 and jours <= 90:
             st.write("✅ Aucun point critique détecté")
+
         st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("""
@@ -349,6 +392,9 @@ elif menu == "🔮 Maintenance Prédictive":
     </div>
     """, unsafe_allow_html=True)
 
+# =========================
+# RAPPORTS
+# =========================
 elif menu == "📄 Rapports & Historique":
     set_background("images/rapport.png")
 
@@ -360,6 +406,7 @@ elif menu == "📄 Rapports & Historique":
     with col1:
         st.markdown('<div class="card">', unsafe_allow_html=True)
         st.subheader("Générer un rapport")
+
         type_rapport = st.selectbox("Type de rapport", ["Rapport patient", "Rapport scanner", "Rapport maintenance"])
         periode = st.selectbox("Période", ["Cette semaine", "Ce mois", "Cette année"])
 
@@ -370,6 +417,7 @@ elif menu == "📄 Rapports & Historique":
         age = st.number_input("Âge patient", 1, 120, 45)
         poids = st.number_input("Poids patient (kg)", 20.0, 200.0, 65.0)
         taille = st.number_input("Taille patient (cm)", 100.0, 220.0, 165.0)
+
         st.markdown('</div>', unsafe_allow_html=True)
 
     imc = calcul_imc(poids, taille)
