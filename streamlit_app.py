@@ -6,7 +6,7 @@ import base64
 import os
 
 # =========================
-# CONFIG
+# CONFIGURATION
 # =========================
 st.set_page_config(
     page_title="PCCT Intelligent System",
@@ -14,9 +14,10 @@ st.set_page_config(
 )
 
 # =========================
-# BACKGROUND IMAGE
+# IMAGE BACKGROUND
 # =========================
 def get_base64_image(path):
+
     if not os.path.exists(path):
         st.error(f"Image introuvable : {path}")
         return None
@@ -26,15 +27,18 @@ def get_base64_image(path):
 
 
 def set_bg(path):
+
     img = get_base64_image(path)
 
     if img:
         st.markdown(
             f"""
             <style>
+
             .stApp {{
                 background:
-                linear-gradient(rgba(0,0,0,0.65),
+                linear-gradient(
+                rgba(0,0,0,0.65),
                 rgba(0,0,0,0.85)),
                 url("data:image/png;base64,{img}");
 
@@ -43,6 +47,7 @@ def set_bg(path):
                 background-repeat: no-repeat;
                 background-attachment: fixed;
             }}
+
             </style>
             """,
             unsafe_allow_html=True
@@ -112,7 +117,10 @@ def imc(poids, taille):
 
 
 def dose(age, imc_value):
-    return round(4.5 + 0.08 * imc_value + 0.015 * age, 2)
+    return round(
+        4.5 + 0.08 * imc_value + 0.015 * age,
+        2
+    )
 
 
 def snr(age, imc_value, dose_value):
@@ -128,10 +136,12 @@ def snr(age, imc_value, dose_value):
     )
 
 # =========================
-# MENU
+# SIDEBAR
 # =========================
+st.sidebar.title("PCCT Menu")
+
 menu = st.sidebar.radio(
-    "Menu",
+    "Navigation",
     [
         "Accueil",
         "Technicien",
@@ -150,18 +160,24 @@ if menu == "Accueil":
     set_bg("accueil.png")
 
     st.title("PCCT Intelligent System")
-    st.subheader("Optimisation intelligente de dose & suivi scanner")
+
+    st.subheader(
+        "Optimisation intelligente de dose & suivi scanner"
+    )
 
     st.markdown("""
     <div class="card">
-    Cette plateforme permet :
+
+    <h3>Fonctionnalités :</h3>
+
     <ul>
     <li>Optimisation automatique de dose</li>
-    <li>Analyse SNR</li>
-    <li>Suivi intelligent scanner</li>
+    <li>Analyse SNR intelligente</li>
+    <li>Suivi scanner en temps réel</li>
     <li>Maintenance prédictive</li>
-    <li>Génération de rapports</li>
+    <li>Rapport patient automatique</li>
     </ul>
+
     </div>
     """, unsafe_allow_html=True)
 
@@ -170,7 +186,7 @@ if menu == "Accueil":
 # =========================
 elif menu == "Technicien":
 
-    set_bg("accueil.png")
+    set_bg("technicien.png")
 
     st.title("Espace Technicien")
 
@@ -178,7 +194,10 @@ elif menu == "Technicien":
 
     with col1:
 
-        st.markdown('<div class="card">', unsafe_allow_html=True)
+        st.markdown(
+            '<div class="card">',
+            unsafe_allow_html=True
+        )
 
         nom = st.text_input("Nom")
         prenom = st.text_input("Prénom")
@@ -205,7 +224,10 @@ elif menu == "Technicien":
             value=170.0
         )
 
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown(
+            '</div>',
+            unsafe_allow_html=True
+        )
 
     i = imc(poids, taille)
     d = dose(age, i)
@@ -231,23 +253,45 @@ elif menu == "SNR":
 
     st.title("Analyse SNR")
 
-    imc_v = st.slider("IMC", 15, 45, 25)
-    age_v = st.slider("Age", 10, 90, 40)
+    imc_v = st.slider(
+        "IMC",
+        15,
+        45,
+        25
+    )
+
+    age_v = st.slider(
+        "Age",
+        10,
+        90,
+        40
+    )
 
     doses = np.linspace(3, 12, 20)
 
-    snrs = [snr(age_v, imc_v, x) for x in doses]
+    snrs = [
+        snr(age_v, imc_v, x)
+        for x in doses
+    ]
 
     df = pd.DataFrame({
         "Dose": doses,
         "SNR": snrs
     })
 
-    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="card">',
+        unsafe_allow_html=True
+    )
 
-    st.line_chart(df.set_index("Dose"))
+    st.line_chart(
+        df.set_index("Dose")
+    )
 
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown(
+        '</div>',
+        unsafe_allow_html=True
+    )
 
 # =========================
 # SUIVI
@@ -258,7 +302,10 @@ elif menu == "Suivi":
 
     st.title("Suivi Intelligent Scanner")
 
-    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="card">',
+        unsafe_allow_html=True
+    )
 
     snr_m = st.number_input(
         "SNR système",
@@ -281,12 +328,22 @@ elif menu == "Suivi":
         25
     )
 
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown(
+        '</div>',
+        unsafe_allow_html=True
+    )
 
     if snr_m > 50 and temp < 75 and vibration < 50:
-        st.success("Scanner en bon état")
+
+        st.success(
+            "Scanner en bon état"
+        )
+
     else:
-        st.warning("Maintenance recommandée")
+
+        st.warning(
+            "Maintenance recommandée"
+        )
 
 # =========================
 # MAINTENANCE
@@ -313,7 +370,9 @@ elif menu == "Maintenance":
     </div>
     """, unsafe_allow_html=True)
 
-    st.warning("Analyse intelligente en cours...")
+    st.warning(
+        "Analyse intelligente en cours..."
+    )
 
 # =========================
 # RAPPORT
@@ -324,7 +383,10 @@ elif menu == "Rapport":
 
     st.title("Rapport Patient")
 
-    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="card">',
+        unsafe_allow_html=True
+    )
 
     nom = st.text_input("Nom")
     prenom = st.text_input("Prénom")
@@ -351,19 +413,24 @@ elif menu == "Rapport":
         value=170.0
     )
 
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown(
+        '</div>',
+        unsafe_allow_html=True
+    )
 
     i = imc(poids, taille)
     d = dose(age, i)
     s = snr(age, i, d)
 
-    txt = f"""
+    txt = f'''
 ==============================
 PCCT INTELLIGENT SYSTEM
 ==============================
 
 Nom : {nom}
+
 Prénom : {prenom}
+
 CIN : {cin}
 
 --------------------------------
@@ -380,9 +447,13 @@ Date :
 {datetime.now()}
 
 ==============================
-"""
+'''
 
-    st.text_area("Rapport généré", txt, height=300)
+    st.text_area(
+        "Rapport généré",
+        txt,
+        height=300
+    )
 
     st.download_button(
         "Télécharger Rapport",
