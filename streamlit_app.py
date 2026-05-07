@@ -17,7 +17,6 @@ st.set_page_config(
 # IMAGE BACKGROUND
 # =========================
 def get_base64_image(path):
-
     if not os.path.exists(path):
         st.error(f"Image introuvable : {path}")
         return None
@@ -27,27 +26,21 @@ def get_base64_image(path):
 
 
 def set_bg(path):
-
     img = get_base64_image(path)
 
     if img:
         st.markdown(
             f"""
             <style>
-
             .stApp {{
                 background:
-                linear-gradient(
-                rgba(0,0,0,0.65),
-                rgba(0,0,0,0.85)),
+                linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.85)),
                 url("data:image/png;base64,{img}");
-
                 background-size: cover;
                 background-position: center;
                 background-repeat: no-repeat;
                 background-attachment: fixed;
             }}
-
             </style>
             """,
             unsafe_allow_html=True
@@ -58,8 +51,6 @@ def set_bg(path):
 # =========================
 st.markdown("""
 <style>
-
-/* Sidebar */
 [data-testid="stSidebar"] {
     background: #04111f;
 }
@@ -68,7 +59,6 @@ st.markdown("""
     color: white;
 }
 
-/* Cards */
 .card {
     background: rgba(5,20,35,0.82);
     padding: 25px;
@@ -78,7 +68,6 @@ st.markdown("""
     box-shadow: 0px 0px 15px rgba(0,0,0,0.35);
 }
 
-/* Buttons */
 .stButton > button {
     background: #0ea5e9;
     color: white;
@@ -88,7 +77,6 @@ st.markdown("""
     font-weight: bold;
 }
 
-/* Metrics */
 [data-testid="stMetric"] {
     background: rgba(5,20,35,0.82);
     padding: 15px;
@@ -96,16 +84,13 @@ st.markdown("""
     border: 1px solid rgba(14,165,233,0.3);
 }
 
-/* Titles */
 h1, h2, h3 {
     color: white;
 }
 
-/* Text */
 p, label, div {
     color: white;
 }
-
 </style>
 """, unsafe_allow_html=True)
 
@@ -116,11 +101,23 @@ def imc(poids, taille):
     return poids / ((taille / 100) ** 2)
 
 
-def dose(age, imc_value):
-    return round(
-        4.5 + 0.08 * imc_value + 0.015 * age,
-        2
-    )
+def dose(age, imc_value, type_examen):
+    base_dose = {
+        "Scanner cérébral": 50,
+        "Scanner thoracique": 10,
+        "Scanner abdominal": 15,
+        "Scanner cardiaque": 20,
+        "Scanner pulmonaire": 8,
+        "Scanner osseux": 12,
+        "Scanner pelvien": 14,
+        "Scanner corps entier": 25
+    }
+
+    dose_ref = base_dose.get(type_examen, 10)
+
+    dose_calculee = dose_ref * (1 + 0.01 * (imc_value - 25)) * (1 + 0.002 * (age - 40))
+
+    return round(dose_calculee, 2)
 
 
 def snr(age, imc_value, dose_value):
@@ -129,7 +126,7 @@ def snr(age, imc_value, dose_value):
             70
             - 0.35 * imc_value
             - 0.08 * age
-            + 1.8 * dose_value,
+            + 0.45 * dose_value,
             10
         ),
         2
@@ -160,16 +157,11 @@ if menu == "Accueil":
     set_bg("accueil.png")
 
     st.title("PCCT Intelligent System")
-
-    st.subheader(
-        "Optimisation intelligente de dose & suivi scanner"
-    )
+    st.subheader("Optimisation intelligente de dose & suivi scanner")
 
     st.markdown("""
     <div class="card">
-
     <h3>Fonctionnalités :</h3>
-
     <ul>
     <li>Optimisation automatique de dose</li>
     <li>Analyse SNR intelligente</li>
@@ -177,7 +169,6 @@ if menu == "Accueil":
     <li>Maintenance prédictive</li>
     <li>Rapport patient automatique</li>
     </ul>
-
     </div>
     """, unsafe_allow_html=True)
 
@@ -193,15 +184,25 @@ elif menu == "Technicien":
     col1, col2 = st.columns(2)
 
     with col1:
-
-        st.markdown(
-            '<div class="card">',
-            unsafe_allow_html=True
-        )
+        st.markdown('<div class="card">', unsafe_allow_html=True)
 
         nom = st.text_input("Nom")
         prenom = st.text_input("Prénom")
         cin = st.text_input("CIN")
+
+        type_examen = st.selectbox(
+            "Type d'examen",
+            [
+                "Scanner cérébral",
+                "Scanner thoracique",
+                "Scanner abdominal",
+                "Scanner cardiaque",
+                "Scanner pulmonaire",
+                "Scanner osseux",
+                "Scanner pelvien",
+                "Scanner corps entier"
+            ]
+        )
 
         age = st.number_input(
             "Age",
@@ -224,17 +225,14 @@ elif menu == "Technicien":
             value=170.0
         )
 
-        st.markdown(
-            '</div>',
-            unsafe_allow_html=True
-        )
+        st.markdown('</div>', unsafe_allow_html=True)
 
     i = imc(poids, taille)
-    d = dose(age, i)
+    d = dose(age, i, type_examen)
     s = snr(age, i, d)
 
     with col2:
-
+        st.info(f"Type d'examen : {type_examen}")
         st.metric("IMC", round(i, 2))
         st.metric("Dose recommandée", d)
         st.metric("SNR estimé", s)
@@ -253,45 +251,34 @@ elif menu == "SNR":
 
     st.title("Analyse SNR")
 
-    imc_v = st.slider(
-        "IMC",
-        15,
-        45,
-        25
+    imc_v = st.slider("IMC", 15, 45, 25)
+    age_v = st.slider("Age", 10, 90, 40)
+
+    type_examen_snr = st.selectbox(
+        "Type d'examen",
+        [
+            "Scanner cérébral",
+            "Scanner thoracique",
+            "Scanner abdominal",
+            "Scanner cardiaque",
+            "Scanner pulmonaire",
+            "Scanner osseux",
+            "Scanner pelvien",
+            "Scanner corps entier"
+        ]
     )
 
-    age_v = st.slider(
-        "Age",
-        10,
-        90,
-        40
-    )
-
-    doses = np.linspace(3, 12, 20)
-
-    snrs = [
-        snr(age_v, imc_v, x)
-        for x in doses
-    ]
+    doses = np.linspace(3, 60, 30)
+    snrs = [snr(age_v, imc_v, x) for x in doses]
 
     df = pd.DataFrame({
         "Dose": doses,
         "SNR": snrs
     })
 
-    st.markdown(
-        '<div class="card">',
-        unsafe_allow_html=True
-    )
-
-    st.line_chart(
-        df.set_index("Dose")
-    )
-
-    st.markdown(
-        '</div>',
-        unsafe_allow_html=True
-    )
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.line_chart(df.set_index("Dose"))
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # =========================
 # SUIVI
@@ -302,10 +289,7 @@ elif menu == "Suivi":
 
     st.title("Suivi Intelligent Scanner")
 
-    st.markdown(
-        '<div class="card">',
-        unsafe_allow_html=True
-    )
+    st.markdown('<div class="card">', unsafe_allow_html=True)
 
     snr_m = st.number_input(
         "SNR système",
@@ -328,22 +312,12 @@ elif menu == "Suivi":
         25
     )
 
-    st.markdown(
-        '</div>',
-        unsafe_allow_html=True
-    )
+    st.markdown('</div>', unsafe_allow_html=True)
 
     if snr_m > 50 and temp < 75 and vibration < 50:
-
-        st.success(
-            "Scanner en bon état"
-        )
-
+        st.success("Scanner en bon état")
     else:
-
-        st.warning(
-            "Maintenance recommandée"
-        )
+        st.warning("Maintenance recommandée")
 
 # =========================
 # MAINTENANCE
@@ -356,9 +330,7 @@ elif menu == "Maintenance":
 
     st.markdown("""
     <div class="card">
-
     <h3>Analyse système :</h3>
-
     <ul>
     <li>Tube RX surveillé</li>
     <li>Détecteurs analysés</li>
@@ -366,13 +338,10 @@ elif menu == "Maintenance":
     <li>SNR monitoré</li>
     <li>Prévision de panne active</li>
     </ul>
-
     </div>
     """, unsafe_allow_html=True)
 
-    st.warning(
-        "Analyse intelligente en cours..."
-    )
+    st.warning("Analyse intelligente en cours...")
 
 # =========================
 # RAPPORT
@@ -383,62 +352,51 @@ elif menu == "Rapport":
 
     st.title("Rapport Patient")
 
-    st.markdown(
-        '<div class="card">',
-        unsafe_allow_html=True
-    )
+    st.markdown('<div class="card">', unsafe_allow_html=True)
 
     nom = st.text_input("Nom")
     prenom = st.text_input("Prénom")
     cin = st.text_input("CIN")
 
-    age = st.number_input(
-        "Age",
-        min_value=1,
-        max_value=120,
-        value=45
+    type_examen = st.selectbox(
+        "Type d'examen",
+        [
+            "Scanner cérébral",
+            "Scanner thoracique",
+            "Scanner abdominal",
+            "Scanner cardiaque",
+            "Scanner pulmonaire",
+            "Scanner osseux",
+            "Scanner pelvien",
+            "Scanner corps entier"
+        ]
     )
 
-    poids = st.number_input(
-        "Poids (kg)",
-        min_value=20.0,
-        max_value=200.0,
-        value=70.0
-    )
+    age = st.number_input("Age", min_value=1, max_value=120, value=45)
+    poids = st.number_input("Poids (kg)", min_value=20.0, max_value=200.0, value=70.0)
+    taille = st.number_input("Taille (cm)", min_value=100.0, max_value=220.0, value=170.0)
 
-    taille = st.number_input(
-        "Taille (cm)",
-        min_value=100.0,
-        max_value=220.0,
-        value=170.0
-    )
-
-    st.markdown(
-        '</div>',
-        unsafe_allow_html=True
-    )
+    st.markdown('</div>', unsafe_allow_html=True)
 
     i = imc(poids, taille)
-    d = dose(age, i)
+    d = dose(age, i, type_examen)
     s = snr(age, i, d)
 
-    txt = f'''
+    txt = f"""
 ==============================
 PCCT INTELLIGENT SYSTEM
 ==============================
 
 Nom : {nom}
-
 Prénom : {prenom}
-
 CIN : {cin}
+
+Type d'examen : {type_examen}
 
 --------------------------------
 
 IMC : {i:.2f}
-
 Dose recommandée : {d}
-
 SNR estimé : {s}
 
 --------------------------------
@@ -447,13 +405,9 @@ Date :
 {datetime.now()}
 
 ==============================
-'''
+"""
 
-    st.text_area(
-        "Rapport généré",
-        txt,
-        height=300
-    )
+    st.text_area("Rapport généré", txt, height=300)
 
     st.download_button(
         "Télécharger Rapport",
