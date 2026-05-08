@@ -8,7 +8,6 @@ from io import BytesIO
 
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
-from reportlab.lib import colors
 
 st.set_page_config(page_title="PCCT Intelligent System", layout="wide")
 
@@ -177,95 +176,93 @@ def etat_systeme(score):
         return "Critique"
 
 # =========================
-# PDF
+# PDF SIMPLE PAGE BLANCHE
 # =========================
 def generer_pdf(patient):
     buffer = BytesIO()
     pdf = canvas.Canvas(buffer, pagesize=A4)
     largeur, hauteur = A4
 
-    pdf.setFillColor(colors.HexColor("#04111f"))
-    pdf.rect(0, 0, largeur, hauteur, fill=1)
+    y = hauteur - 60
 
-    pdf.setFillColor(colors.HexColor("#0ea5e9"))
-    pdf.rect(0, hauteur - 90, largeur, 90, fill=1)
+    pdf.setFont("Helvetica-Bold", 20)
+    pdf.drawString(190, y, "Rapport Patient")
 
-    pdf.setFillColor(colors.white)
-    pdf.setFont("Helvetica-Bold", 22)
-    pdf.drawString(40, hauteur - 45, "PCCT Intelligent System")
+    y -= 50
 
-    pdf.setFont("Helvetica", 12)
-    pdf.drawString(40, hauteur - 70, "Rapport patient - Optimisation dose, SNR et paramètres scanner")
+    pdf.setFont("Helvetica", 11)
+    pdf.drawString(50, y, f"Date : {patient.get('Date', 'Non renseigné')}")
 
-    y = hauteur - 125
+    y -= 45
 
-    def section(titre):
+    def titre(txt):
         nonlocal y
-        pdf.setFillColor(colors.HexColor("#0ea5e9"))
         pdf.setFont("Helvetica-Bold", 14)
-        pdf.drawString(40, y, titre)
-        y -= 25
+        pdf.drawString(50, y, txt)
+        y -= 30
 
     def ligne(label, valeur):
         nonlocal y
-        pdf.setFillColor(colors.white)
         pdf.setFont("Helvetica-Bold", 11)
-        pdf.drawString(55, y, f"{label} :")
+        pdf.drawString(60, y, f"{label} :")
         pdf.setFont("Helvetica", 11)
-        pdf.drawString(200, y, str(valeur))
-        y -= 20
+        pdf.drawString(220, y, str(valeur))
+        y -= 22
 
-    section("Informations patient")
-    ligne("Date", patient["Date"])
-    ligne("Nom", patient["Nom"])
-    ligne("Prénom", patient["Prénom"])
-    ligne("CIN", patient["CIN"])
-    ligne("Sexe", patient["Sexe"])
-    ligne("Âge", patient["Age"])
-    ligne("Poids", f'{patient["Poids"]} kg')
-    ligne("Taille", f'{patient["Taille"]} cm')
-    ligne("IMC", patient["IMC"])
-    ligne("Classe IMC", patient["Classe IMC"])
-
-    y -= 10
-    section("Examen")
-    ligne("Type d'examen", patient["Type examen"])
+    titre("Informations Patient")
+    ligne("Nom", patient.get("Nom", "Non renseigné"))
+    ligne("Prénom", patient.get("Prénom", "Non renseigné"))
+    ligne("CIN", patient.get("CIN", "Non renseigné"))
+    ligne("Sexe", patient.get("Sexe", "Non renseigné"))
+    ligne("Âge", patient.get("Age", "Non renseigné"))
+    ligne("Poids", f"{patient.get('Poids', 'Non renseigné')} kg")
+    ligne("Taille", f"{patient.get('Taille', 'Non renseigné')} cm")
+    ligne("IMC", patient.get("IMC", "Non renseigné"))
+    ligne("Classe IMC", patient.get("Classe IMC", "Non renseigné"))
 
     y -= 10
-    section("Paramètres recommandés")
-    ligne("Dose recommandée", f'{patient["Dose"]} mGy')
-    ligne("SNR estimé", patient["SNR"])
-    ligne("kVp", patient["kVp"])
-    ligne("mAs", patient["mAs"])
-    ligne("CTDIvol", f'{patient["CTDIvol"]} mGy')
-    ligne("DLP", f'{patient["DLP"]} mGy.cm')
+    titre("Examen")
+    ligne("Type d'examen", patient.get("Type examen", "Non renseigné"))
 
     y -= 10
-    section("Recommandation IA")
-    pdf.setFillColor(colors.white)
+    titre("Paramètres Recommandés")
+    ligne("Dose recommandée", f"{patient.get('Dose', 'Non renseigné')} mGy")
+    ligne("SNR estimé", patient.get("SNR", "Non renseigné"))
+    ligne("kVp", patient.get("kVp", "Non renseigné"))
+    ligne("mAs", patient.get("mAs", "Non renseigné"))
+    ligne("CTDIvol", f"{patient.get('CTDIvol', 'Non renseigné')} mGy")
+    ligne("DLP", f"{patient.get('DLP', 'Non renseigné')} mGy.cm")
+
+    y -= 10
+    titre("Recommandation IA")
+
+    reco = str(patient.get("Recommandation", "Non renseigné"))
     pdf.setFont("Helvetica", 11)
 
-    reco = patient["Recommandation"]
-    lignes_reco = [reco[i:i+80] for i in range(0, len(reco), 80)]
-
-    for l in lignes_reco:
-        pdf.drawString(55, y, l)
+    for i in range(0, len(reco), 80):
+        pdf.drawString(60, y, reco[i:i+80])
         y -= 18
 
     y -= 20
-    section("Conclusion")
+    titre("Conclusion")
+
+    snr_value = patient.get("SNR", 0)
+    try:
+        snr_value = float(snr_value)
+    except:
+        snr_value = 0
 
     conclusion = (
         "Qualité image acceptable."
-        if patient["SNR"] >= 50
+        if snr_value >= 50
         else "Qualité image insuffisante : ajustement recommandé."
     )
 
-    ligne("Résultat", conclusion)
+    pdf.setFont("Helvetica", 11)
+    pdf.drawString(60, y, conclusion)
 
-    pdf.setFillColor(colors.HexColor("#0ea5e9"))
-    pdf.setFont("Helvetica-Bold", 10)
-    pdf.drawString(40, 35, "Rapport généré automatiquement par PCCT Intelligent System")
+    pdf.setFont("Helvetica-Oblique", 9)
+    pdf.drawString(50, 30, "PCCT Intelligent System")
 
     pdf.save()
     buffer.seek(0)
@@ -317,7 +314,6 @@ elif menu == "Technicien":
         nom = st.text_input("Nom")
         prenom = st.text_input("Prénom")
         cin = st.text_input("CIN")
-
         sexe = st.selectbox("Sexe", ["Homme", "Femme"])
 
         type_examen = st.selectbox(
@@ -412,8 +408,8 @@ elif menu == "Rapport":
             "Choisir un patient pour générer son rapport PDF",
             df_patients.index,
             format_func=lambda x:
-            f"{df_patients.loc[x, 'Nom']} {df_patients.loc[x, 'Prénom']} "
-            f"- {df_patients.loc[x, 'Type examen']}"
+            f"{df_patients.loc[x].get('Nom', '')} {df_patients.loc[x].get('Prénom', '')} "
+            f"- {df_patients.loc[x].get('Type examen', '')}"
         )
 
         patient = df_patients.loc[patient_index].to_dict()
@@ -422,26 +418,26 @@ elif menu == "Rapport":
 
         st.subheader("Aperçu du rapport sélectionné")
 
-        st.write(f"**Nom :** {patient['Nom']}")
-        st.write(f"**Prénom :** {patient['Prénom']}")
-        st.write(f"**CIN :** {patient['CIN']}")
-        st.write(f"**Sexe :** {patient['Sexe']}")
-        st.write(f"**Type d'examen :** {patient['Type examen']}")
-        st.write(f"**IMC :** {patient['IMC']} — {patient['Classe IMC']}")
-        st.write(f"**Dose recommandée :** {patient['Dose']} mGy")
-        st.write(f"**SNR estimé :** {patient['SNR']}")
-        st.write(f"**kVp :** {patient['kVp']}")
-        st.write(f"**mAs :** {patient['mAs']}")
-        st.write(f"**CTDIvol :** {patient['CTDIvol']} mGy")
-        st.write(f"**DLP :** {patient['DLP']} mGy.cm")
-        st.info(patient["Recommandation"])
+        st.write(f"**Nom :** {patient.get('Nom', 'Non renseigné')}")
+        st.write(f"**Prénom :** {patient.get('Prénom', 'Non renseigné')}")
+        st.write(f"**CIN :** {patient.get('CIN', 'Non renseigné')}")
+        st.write(f"**Sexe :** {patient.get('Sexe', 'Non renseigné')}")
+        st.write(f"**Type d'examen :** {patient.get('Type examen', 'Non renseigné')}")
+        st.write(f"**IMC :** {patient.get('IMC', 'Non renseigné')} — {patient.get('Classe IMC', 'Non renseigné')}")
+        st.write(f"**Dose recommandée :** {patient.get('Dose', 'Non renseigné')} mGy")
+        st.write(f"**SNR estimé :** {patient.get('SNR', 'Non renseigné')}")
+        st.write(f"**kVp :** {patient.get('kVp', 'Non renseigné')}")
+        st.write(f"**mAs :** {patient.get('mAs', 'Non renseigné')}")
+        st.write(f"**CTDIvol :** {patient.get('CTDIvol', 'Non renseigné')} mGy")
+        st.write(f"**DLP :** {patient.get('DLP', 'Non renseigné')} mGy.cm")
+        st.info(patient.get("Recommandation", "Non renseigné"))
 
         pdf_file = generer_pdf(patient)
 
         st.download_button(
             "Télécharger le rapport PDF",
             data=pdf_file,
-            file_name=f"rapport_{patient['Nom']}_{patient['Prénom']}.pdf",
+            file_name=f"rapport_{patient.get('Nom','patient')}_{patient.get('Prénom','')}.pdf",
             mime="application/pdf"
         )
 
