@@ -44,12 +44,9 @@ def set_bg(path):
 # =========================
 st.markdown("""
 <style>
-[data-testid="stSidebar"] {
-    background:#03111f;
-}
-[data-testid="stSidebar"] * {
-    color:white;
-}
+[data-testid="stSidebar"] { background:#03111f; }
+[data-testid="stSidebar"] * { color:white; }
+
 .card {
     background:rgba(5,20,35,0.85);
     padding:22px;
@@ -58,9 +55,9 @@ st.markdown("""
     border:1px solid rgba(14,165,233,0.35);
     box-shadow:0 0 18px rgba(0,0,0,0.45);
 }
-h1, h2, h3, p, label, div {
-    color:white;
-}
+
+h1, h2, h3, p, label, div { color:white; }
+
 .stButton > button {
     background:#0ea5e9;
     color:white;
@@ -68,6 +65,7 @@ h1, h2, h3, p, label, div {
     border:none;
     font-weight:bold;
 }
+
 [data-testid="stMetric"] {
     background:rgba(5,20,35,0.88);
     padding:15px;
@@ -82,9 +80,6 @@ h1, h2, h3, p, label, div {
 # =========================
 if "patients" not in st.session_state:
     st.session_state.patients = []
-
-if "dernier_patient" not in st.session_state:
-    st.session_state.dernier_patient = None
 
 # =========================
 # FONCTIONS
@@ -225,6 +220,7 @@ def generer_pdf(patient):
     ligne("Nom", patient["Nom"])
     ligne("Prénom", patient["Prénom"])
     ligne("CIN", patient["CIN"])
+    ligne("Sexe", patient["Sexe"])
     ligne("Âge", patient["Age"])
     ligne("Poids", f'{patient["Poids"]} kg')
     ligne("Taille", f'{patient["Taille"]} cm')
@@ -246,7 +242,6 @@ def generer_pdf(patient):
 
     y -= 10
     section("Recommandation IA")
-
     pdf.setFillColor(colors.white)
     pdf.setFont("Helvetica", 11)
 
@@ -323,6 +318,8 @@ elif menu == "Technicien":
         prenom = st.text_input("Prénom")
         cin = st.text_input("CIN")
 
+        sexe = st.selectbox("Sexe", ["Homme", "Femme"])
+
         type_examen = st.selectbox(
             "Type d'examen",
             [
@@ -374,6 +371,7 @@ elif menu == "Technicien":
             "Nom": nom,
             "Prénom": prenom,
             "CIN": cin,
+            "Sexe": sexe,
             "Type examen": type_examen,
             "Age": age,
             "Poids": poids,
@@ -390,8 +388,7 @@ elif menu == "Technicien":
         }
 
         st.session_state.patients.append(patient)
-        st.session_state.dernier_patient = patient
-        st.success("Patient enregistré. Le rapport PDF est prêt dans la page Rapport.")
+        st.success("Patient ajouté à la liste des rapports.")
 
 # =========================
 # RAPPORT
@@ -399,20 +396,36 @@ elif menu == "Technicien":
 elif menu == "Rapport":
     set_bg("rapport.png")
 
-    st.title("Rapport Patient PDF")
+    st.title("Rapports Patients")
 
-    patient = st.session_state.dernier_patient
-
-    if patient is None:
-        st.warning("Aucun patient enregistré. Va d'abord dans l'espace Technicien et clique sur Calculer et enregistrer.")
+    if len(st.session_state.patients) == 0:
+        st.warning("Aucun patient enregistré. Va d'abord dans l'espace Technicien.")
     else:
+        df_patients = pd.DataFrame(st.session_state.patients)
+
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+        st.subheader("Liste des patients enregistrés")
+        st.dataframe(df_patients, use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        patient_index = st.selectbox(
+            "Choisir un patient pour générer son rapport PDF",
+            df_patients.index,
+            format_func=lambda x:
+            f"{df_patients.loc[x, 'Nom']} {df_patients.loc[x, 'Prénom']} "
+            f"- {df_patients.loc[x, 'Type examen']}"
+        )
+
+        patient = df_patients.loc[patient_index].to_dict()
+
         st.markdown('<div class="card">', unsafe_allow_html=True)
 
-        st.subheader("Aperçu du rapport")
+        st.subheader("Aperçu du rapport sélectionné")
 
         st.write(f"**Nom :** {patient['Nom']}")
         st.write(f"**Prénom :** {patient['Prénom']}")
         st.write(f"**CIN :** {patient['CIN']}")
+        st.write(f"**Sexe :** {patient['Sexe']}")
         st.write(f"**Type d'examen :** {patient['Type examen']}")
         st.write(f"**IMC :** {patient['IMC']} — {patient['Classe IMC']}")
         st.write(f"**Dose recommandée :** {patient['Dose']} mGy")
@@ -428,7 +441,7 @@ elif menu == "Rapport":
         st.download_button(
             "Télécharger le rapport PDF",
             data=pdf_file,
-            file_name="rapport_patient_pcct.pdf",
+            file_name=f"rapport_{patient['Nom']}_{patient['Prénom']}.pdf",
             mime="application/pdf"
         )
 
@@ -517,7 +530,7 @@ elif menu == "Dashboard":
         col2.metric("Dose moyenne", round(df_patients["Dose"].mean(), 2))
         col3.metric("SNR moyen", round(df_patients["SNR"].mean(), 2))
 
-        st.dataframe(df_patients)
+        st.dataframe(df_patients, use_container_width=True)
         st.line_chart(df_patients[["Dose", "SNR"]])
 
         csv = df_patients.to_csv(index=False).encode("utf-8")
