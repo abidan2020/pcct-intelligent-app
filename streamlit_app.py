@@ -4,6 +4,11 @@ import numpy as np
 from datetime import datetime
 import base64
 import os
+from io import BytesIO
+
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
+from reportlab.lib import colors
 
 st.set_page_config(page_title="PCCT Intelligent System", layout="wide")
 
@@ -73,7 +78,7 @@ h1, h2, h3, p, label, div {
 """, unsafe_allow_html=True)
 
 # =========================
-# SESSION DATA
+# SESSION
 # =========================
 if "patients" not in st.session_state:
     st.session_state.patients = []
@@ -177,6 +182,101 @@ def etat_systeme(score):
         return "Critique"
 
 # =========================
+# PDF
+# =========================
+def generer_pdf(patient):
+    buffer = BytesIO()
+    pdf = canvas.Canvas(buffer, pagesize=A4)
+    largeur, hauteur = A4
+
+    pdf.setFillColor(colors.HexColor("#04111f"))
+    pdf.rect(0, 0, largeur, hauteur, fill=1)
+
+    pdf.setFillColor(colors.HexColor("#0ea5e9"))
+    pdf.rect(0, hauteur - 90, largeur, 90, fill=1)
+
+    pdf.setFillColor(colors.white)
+    pdf.setFont("Helvetica-Bold", 22)
+    pdf.drawString(40, hauteur - 45, "PCCT Intelligent System")
+
+    pdf.setFont("Helvetica", 12)
+    pdf.drawString(40, hauteur - 70, "Rapport patient - Optimisation dose, SNR et paramètres scanner")
+
+    y = hauteur - 125
+
+    def section(titre):
+        nonlocal y
+        pdf.setFillColor(colors.HexColor("#0ea5e9"))
+        pdf.setFont("Helvetica-Bold", 14)
+        pdf.drawString(40, y, titre)
+        y -= 25
+
+    def ligne(label, valeur):
+        nonlocal y
+        pdf.setFillColor(colors.white)
+        pdf.setFont("Helvetica-Bold", 11)
+        pdf.drawString(55, y, f"{label} :")
+        pdf.setFont("Helvetica", 11)
+        pdf.drawString(200, y, str(valeur))
+        y -= 20
+
+    section("Informations patient")
+    ligne("Date", patient["Date"])
+    ligne("Nom", patient["Nom"])
+    ligne("Prénom", patient["Prénom"])
+    ligne("CIN", patient["CIN"])
+    ligne("Âge", patient["Age"])
+    ligne("Poids", f'{patient["Poids"]} kg')
+    ligne("Taille", f'{patient["Taille"]} cm')
+    ligne("IMC", patient["IMC"])
+    ligne("Classe IMC", patient["Classe IMC"])
+
+    y -= 10
+    section("Examen")
+    ligne("Type d'examen", patient["Type examen"])
+
+    y -= 10
+    section("Paramètres recommandés")
+    ligne("Dose recommandée", f'{patient["Dose"]} mGy')
+    ligne("SNR estimé", patient["SNR"])
+    ligne("kVp", patient["kVp"])
+    ligne("mAs", patient["mAs"])
+    ligne("CTDIvol", f'{patient["CTDIvol"]} mGy')
+    ligne("DLP", f'{patient["DLP"]} mGy.cm')
+
+    y -= 10
+    section("Recommandation IA")
+
+    pdf.setFillColor(colors.white)
+    pdf.setFont("Helvetica", 11)
+
+    reco = patient["Recommandation"]
+    lignes_reco = [reco[i:i+80] for i in range(0, len(reco), 80)]
+
+    for l in lignes_reco:
+        pdf.drawString(55, y, l)
+        y -= 18
+
+    y -= 20
+    section("Conclusion")
+
+    conclusion = (
+        "Qualité image acceptable."
+        if patient["SNR"] >= 50
+        else "Qualité image insuffisante : ajustement recommandé."
+    )
+
+    ligne("Résultat", conclusion)
+
+    pdf.setFillColor(colors.HexColor("#0ea5e9"))
+    pdf.setFont("Helvetica-Bold", 10)
+    pdf.drawString(40, 35, "Rapport généré automatiquement par PCCT Intelligent System")
+
+    pdf.save()
+    buffer.seek(0)
+    return buffer
+
+# =========================
 # MENU
 # =========================
 st.sidebar.title("PCCT Intelligent System")
@@ -199,7 +299,7 @@ if menu == "Accueil":
     <div class="card">
     <h3>Objectif de l'application</h3>
     <p>
-    Cette plateforme aide à proposer une dose adaptée au patient tout en conservant
+    Cette plateforme propose une dose adaptée au patient tout en conservant
     une qualité d'image acceptable, puis surveille l'état du scanner pour anticiper
     les besoins de maintenance.
     </p>
@@ -291,71 +391,48 @@ elif menu == "Technicien":
 
         st.session_state.patients.append(patient)
         st.session_state.dernier_patient = patient
-
-        st.success("Patient enregistré. Le rapport est maintenant généré automatiquement.")
+        st.success("Patient enregistré. Le rapport PDF est prêt dans la page Rapport.")
 
 # =========================
-# RAPPORT AUTOMATIQUE
+# RAPPORT
 # =========================
 elif menu == "Rapport":
     set_bg("rapport.png")
 
-    st.title("Rapport Patient Automatique")
+    st.title("Rapport Patient PDF")
 
     patient = st.session_state.dernier_patient
 
     if patient is None:
         st.warning("Aucun patient enregistré. Va d'abord dans l'espace Technicien et clique sur Calculer et enregistrer.")
     else:
-        rapport = f"""
-==============================
-PCCT INTELLIGENT SYSTEM
-==============================
+        st.markdown('<div class="card">', unsafe_allow_html=True)
 
-Date : {patient["Date"]}
+        st.subheader("Aperçu du rapport")
 
-Informations patient
-------------------------------
-Nom : {patient["Nom"]}
-Prénom : {patient["Prénom"]}
-CIN : {patient["CIN"]}
-Âge : {patient["Age"]}
-Poids : {patient["Poids"]} kg
-Taille : {patient["Taille"]} cm
-IMC : {patient["IMC"]}
-Classe IMC : {patient["Classe IMC"]}
+        st.write(f"**Nom :** {patient['Nom']}")
+        st.write(f"**Prénom :** {patient['Prénom']}")
+        st.write(f"**CIN :** {patient['CIN']}")
+        st.write(f"**Type d'examen :** {patient['Type examen']}")
+        st.write(f"**IMC :** {patient['IMC']} — {patient['Classe IMC']}")
+        st.write(f"**Dose recommandée :** {patient['Dose']} mGy")
+        st.write(f"**SNR estimé :** {patient['SNR']}")
+        st.write(f"**kVp :** {patient['kVp']}")
+        st.write(f"**mAs :** {patient['mAs']}")
+        st.write(f"**CTDIvol :** {patient['CTDIvol']} mGy")
+        st.write(f"**DLP :** {patient['DLP']} mGy.cm")
+        st.info(patient["Recommandation"])
 
-Examen
-------------------------------
-Type d'examen : {patient["Type examen"]}
-
-Paramètres recommandés
-------------------------------
-Dose recommandée : {patient["Dose"]} mGy
-SNR estimé : {patient["SNR"]}
-kVp : {patient["kVp"]}
-mAs : {patient["mAs"]}
-CTDIvol : {patient["CTDIvol"]} mGy
-DLP : {patient["DLP"]} mGy.cm
-
-Recommandation IA
-------------------------------
-{patient["Recommandation"]}
-
-Conclusion
-------------------------------
-{"Qualité image acceptable." if patient["SNR"] >= 50 else "Qualité image insuffisante : ajustement recommandé."}
-
-==============================
-"""
-
-        st.text_area("Rapport généré automatiquement", rapport, height=420)
+        pdf_file = generer_pdf(patient)
 
         st.download_button(
-            "Télécharger le rapport",
-            rapport,
-            file_name="rapport_patient_pcct.txt"
+            "Télécharger le rapport PDF",
+            data=pdf_file,
+            file_name="rapport_patient_pcct.pdf",
+            mime="application/pdf"
         )
+
+        st.markdown('</div>', unsafe_allow_html=True)
 
 # =========================
 # SNR
@@ -391,6 +468,13 @@ elif menu == "Suivi":
     st.metric("Score de stress système", score)
     st.metric("État système", etat)
 
+    if etat == "Stable":
+        st.success("Scanner stable")
+    elif etat == "À surveiller":
+        st.warning("Scanner à surveiller")
+    else:
+        st.error("Risque élevé : maintenance recommandée")
+
 # =========================
 # MAINTENANCE
 # =========================
@@ -409,6 +493,13 @@ elif menu == "Maintenance":
     st.metric("Score maintenance", score)
     st.metric("État", etat)
 
+    if etat == "Stable":
+        st.success("Fonctionnement normal")
+    elif etat == "À surveiller":
+        st.warning("Contrôle préventif recommandé")
+    else:
+        st.error("Inspection tube RX / détecteurs recommandée")
+
 # =========================
 # DASHBOARD
 # =========================
@@ -420,6 +511,11 @@ elif menu == "Dashboard":
         st.warning("Aucun patient enregistré pour le moment.")
     else:
         df_patients = pd.DataFrame(st.session_state.patients)
+
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Nombre patients", len(df_patients))
+        col2.metric("Dose moyenne", round(df_patients["Dose"].mean(), 2))
+        col3.metric("SNR moyen", round(df_patients["SNR"].mean(), 2))
 
         st.dataframe(df_patients)
         st.line_chart(df_patients[["Dose", "SNR"]])
