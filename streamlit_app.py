@@ -236,10 +236,8 @@ def generer_pdf(patient):
     y -= 20
     titre("Conclusion")
 
-    snr_value = patient.get("SNR", 0)
-
     try:
-        snr_value = float(snr_value)
+        snr_value = float(patient.get("SNR", 0))
     except:
         snr_value = 0
 
@@ -259,6 +257,32 @@ def generer_pdf(patient):
     buffer.seek(0)
 
     return buffer
+
+
+def generer_excel(df_patients):
+    excel_buffer = BytesIO()
+
+    with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
+        df_patients.to_excel(
+            writer,
+            index=False,
+            sheet_name="Patients"
+        )
+
+        worksheet = writer.sheets["Patients"]
+
+        for column_cells in worksheet.columns:
+            longueur = max(
+                len(str(cell.value)) if cell.value is not None else 0
+                for cell in column_cells
+            )
+
+            worksheet.column_dimensions[
+                column_cells[0].column_letter
+            ].width = longueur + 4
+
+    excel_buffer.seek(0)
+    return excel_buffer
 
 # =========================
 # MENU
@@ -451,21 +475,9 @@ elif menu == "Rapport":
         ]
 
         with st.form("form_modification_patient"):
-
-            nouveau_nom = st.text_input(
-                "Nom",
-                patient.get("Nom", "")
-            )
-
-            nouveau_prenom = st.text_input(
-                "Prénom",
-                patient.get("Prénom", "")
-            )
-
-            nouveau_cin = st.text_input(
-                "CIN",
-                patient.get("CIN", "")
-            )
+            nouveau_nom = st.text_input("Nom", patient.get("Nom", ""))
+            nouveau_prenom = st.text_input("Prénom", patient.get("Prénom", ""))
+            nouveau_cin = st.text_input("CIN", patient.get("CIN", ""))
 
             nouveau_sexe = st.selectbox(
                 "Sexe",
@@ -630,44 +642,14 @@ elif menu == "Dashboard":
 
         st.dataframe(df_patients, use_container_width=True)
 
+        st.subheader("Évolution Dose / SNR")
         st.line_chart(df_patients[["Dose", "SNR"]])
 
-       from io import BytesIO
+        excel_file = generer_excel(df_patients)
 
-excel_buffer = BytesIO()
-
-with pd.ExcelWriter(
-    excel_buffer,
-    engine="openpyxl"
-) as writer:
-
-    df_patients.to_excel(
-        writer,
-        index=False,
-        sheet_name="Patients"
-    )
-
-    worksheet = writer.sheets["Patients"]
-
-    # Ajuster largeur colonnes
-    for column_cells in worksheet.columns:
-
-        longueur = max(
-            len(str(cell.value))
-            if cell.value is not None else 0
-            for cell in column_cells
-        )
-
-        worksheet.column_dimensions[
-            column_cells[0].column_letter
-        ].width = longueur + 4
-
-excel_buffer.seek(0)
-
-st.download_button(
-    "Télécharger historique Excel",
-    data=excel_buffer,
-    file_name="historique_patients.xlsx",
-    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-)
+        st.download_button(
+            "Télécharger historique Excel",
+            data=excel_file,
+            file_name="historique_patients.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
