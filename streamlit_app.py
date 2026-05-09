@@ -652,4 +652,16 @@ elif menu == "Dashboard":
             data=excel_file,
             file_name="historique_patients.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            st.subheader("Restaurer une ancienne liste de patients")
+
+fichier_importe = st.file_uploader(
+    "Importer un fichier Excel historique",
+    type=["xlsx"]
+)
+
+if fichier_importe is not None:
+    df_import = pd.read_excel(fichier_importe)
+    st.session_state.patients = df_import.to_dict("records")
+    st.success("Liste des patients restaurée avec succès.")
+    st.rerun()
         )
