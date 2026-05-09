@@ -15,26 +15,35 @@ st.set_page_config(page_title="PCCT Intelligent System", layout="wide")
 # BACKGROUND
 # =========================
 def get_base64_image(path):
+
     if not os.path.exists(path):
         st.warning(f"Image introuvable : {path}")
         return None
+
     with open(path, "rb") as f:
         return base64.b64encode(f.read()).decode()
 
 def set_bg(path):
+
     img = get_base64_image(path)
+
     if img:
+
         st.markdown(f"""
         <style>
+
         .stApp {{
+
             background:
             linear-gradient(rgba(0,0,0,0.72), rgba(0,0,0,0.88)),
             url("data:image/png;base64,{img}");
+
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
             background-attachment: fixed;
         }}
+
         </style>
         """, unsafe_allow_html=True)
 
@@ -43,34 +52,59 @@ def set_bg(path):
 # =========================
 st.markdown("""
 <style>
-[data-testid="stSidebar"] { background:#03111f; }
-[data-testid="stSidebar"] * { color:white; }
+
+[data-testid="stSidebar"] {
+    background:#03111f;
+}
+
+[data-testid="stSidebar"] * {
+    color:white;
+}
 
 .card {
+
     background:rgba(5,20,35,0.85);
+
     padding:22px;
+
     border-radius:18px;
+
     margin-bottom:18px;
+
     border:1px solid rgba(14,165,233,0.35);
+
     box-shadow:0 0 18px rgba(0,0,0,0.45);
 }
 
-h1, h2, h3, p, label, div { color:white; }
+h1, h2, h3, p, label, div {
+
+    color:white;
+}
 
 .stButton > button {
+
     background:#0ea5e9;
+
     color:white;
+
     border-radius:12px;
+
     border:none;
+
     font-weight:bold;
 }
 
 [data-testid="stMetric"] {
+
     background:rgba(5,20,35,0.88);
+
     padding:15px;
+
     border-radius:15px;
+
     border:1px solid rgba(14,165,233,0.3);
 }
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -84,132 +118,213 @@ if "patients" not in st.session_state:
 # FONCTIONS
 # =========================
 def calcul_imc(poids, taille):
+
     return poids / ((taille / 100) ** 2)
 
 def classe_imc(imc):
+
     if imc < 18.5:
         return "Maigreur"
+
     elif imc < 25:
         return "Normal"
+
     elif imc < 30:
         return "Surpoids"
+
     else:
         return "Obésité"
 
 def protocole_examen(type_examen):
+
     protocoles = {
-        "Scanner cérébral": {"ctdi": 50, "kvp": 120, "mas": 250, "dlp": 900},
-        "Scanner thoracique": {"ctdi": 10, "kvp": 100, "mas": 120, "dlp": 350},
-        "Scanner abdominal": {"ctdi": 15, "kvp": 120, "mas": 180, "dlp": 600},
-        "Scanner cardiaque": {"ctdi": 20, "kvp": 100, "mas": 220, "dlp": 450},
-        "Scanner pulmonaire": {"ctdi": 8, "kvp": 100, "mas": 90, "dlp": 250},
-        "Scanner osseux": {"ctdi": 12, "kvp": 120, "mas": 160, "dlp": 400},
-        "Scanner pelvien": {"ctdi": 14, "kvp": 120, "mas": 170, "dlp": 500},
-        "Scanner corps entier": {"ctdi": 25, "kvp": 120, "mas": 300, "dlp": 1100}
+
+        "Scanner cérébral": {
+            "ctdi": 50,
+            "kvp": 120,
+            "mas": 250,
+            "dlp": 900
+        },
+
+        "Scanner thoracique": {
+            "ctdi": 10,
+            "kvp": 100,
+            "mas": 120,
+            "dlp": 350
+        },
+
+        "Scanner abdominal": {
+            "ctdi": 15,
+            "kvp": 120,
+            "mas": 180,
+            "dlp": 600
+        },
+
+        "Scanner cardiaque": {
+            "ctdi": 20,
+            "kvp": 100,
+            "mas": 220,
+            "dlp": 450
+        },
+
+        "Scanner pulmonaire": {
+            "ctdi": 8,
+            "kvp": 100,
+            "mas": 90,
+            "dlp": 250
+        },
+
+        "Scanner osseux": {
+            "ctdi": 12,
+            "kvp": 120,
+            "mas": 160,
+            "dlp": 400
+        },
+
+        "Scanner pelvien": {
+            "ctdi": 14,
+            "kvp": 120,
+            "mas": 170,
+            "dlp": 500
+        },
+
+        "Scanner corps entier": {
+            "ctdi": 25,
+            "kvp": 120,
+            "mas": 300,
+            "dlp": 1100
+        }
     }
+
     return protocoles[type_examen]
 
 def dose_adaptee(age, imc, type_examen):
+
     p = protocole_examen(type_examen)
+
     ctdi_ref = p["ctdi"]
 
     facteur_imc = 1 + 0.015 * (imc - 25)
+
     facteur_age = 1 + 0.002 * (age - 40)
 
     dose = ctdi_ref * facteur_imc * facteur_age
+
     dose = max(dose, ctdi_ref * 0.55)
+
     dose = min(dose, ctdi_ref * 1.35)
 
     return round(dose, 2)
 
 def calcul_snr(age, imc, dose):
+
     snr = 60 - 0.30 * imc - 0.05 * age + 0.70 * dose
+
     return round(max(snr, 10), 2)
 
 def adaptation_parametres(age, imc, type_examen, dose, snr):
+
     p = protocole_examen(type_examen)
 
     kvp = p["kvp"]
+
     mas = p["mas"]
 
     if imc > 30:
         mas *= 1.20
+
     elif imc < 20:
         mas *= 0.85
 
     if snr < 50:
         mas *= 1.15
+
     elif snr > 65:
         mas *= 0.90
 
     ctdi = dose
+
     dlp = p["dlp"] * (dose / p["ctdi"])
 
     return round(kvp), round(mas), round(ctdi, 2), round(dlp, 2)
 
 def recommandation_ia(snr, dose, imc):
+
     if snr < 50:
+
         return "SNR faible : augmenter légèrement le mAs ou ajuster la dose."
+
     elif dose > 30 and imc < 25:
+
         return "Dose élevée : réduction progressive possible tout en surveillant le SNR."
+
     elif snr >= 50 and dose <= 25:
+
         return "Paramètres acceptables : dose optimisée avec qualité image correcte."
+
     elif imc > 30:
+
         return "Patient à IMC élevé : surveiller le bruit image et adapter le mAs."
+
     else:
+
         return "Acquisition acceptable selon les paramètres estimés."
 
-def stress_score(snr_sys, temp, vibration, heures):
-    score = 0
-    score += max(0, (50 - snr_sys)) * 1.5
-    score += max(0, (temp - 60)) * 1.2
-    score += vibration * 0.4
-    score += heures * 0.01
-    return round(min(score, 100), 2)
-
-def etat_systeme(score):
-    if score < 35:
-        return "Stable"
-    elif score < 70:
-        return "À surveiller"
-    else:
-        return "Critique"
-
 # =========================
-# PDF SIMPLE PAGE BLANCHE
+# PDF
 # =========================
 def generer_pdf(patient):
+
     buffer = BytesIO()
+
     pdf = canvas.Canvas(buffer, pagesize=A4)
+
     largeur, hauteur = A4
 
     y = hauteur - 60
 
     pdf.setFont("Helvetica-Bold", 20)
+
     pdf.drawString(190, y, "Rapport Patient")
 
     y -= 50
 
     pdf.setFont("Helvetica", 11)
-    pdf.drawString(50, y, f"Date : {patient.get('Date', 'Non renseigné')}")
+
+    pdf.drawString(
+        50,
+        y,
+        f"Date : {patient.get('Date', 'Non renseigné')}"
+    )
 
     y -= 45
 
     def titre(txt):
+
         nonlocal y
+
         pdf.setFont("Helvetica-Bold", 14)
+
         pdf.drawString(50, y, txt)
+
         y -= 30
 
     def ligne(label, valeur):
+
         nonlocal y
+
         pdf.setFont("Helvetica-Bold", 11)
+
         pdf.drawString(60, y, f"{label} :")
+
         pdf.setFont("Helvetica", 11)
+
         pdf.drawString(220, y, str(valeur))
+
         y -= 22
 
     titre("Informations Patient")
+
     ligne("Nom", patient.get("Nom", "Non renseigné"))
     ligne("Prénom", patient.get("Prénom", "Non renseigné"))
     ligne("CIN", patient.get("CIN", "Non renseigné"))
@@ -221,11 +336,15 @@ def generer_pdf(patient):
     ligne("Classe IMC", patient.get("Classe IMC", "Non renseigné"))
 
     y -= 10
+
     titre("Examen")
+
     ligne("Type d'examen", patient.get("Type examen", "Non renseigné"))
 
     y -= 10
-    titre("Paramètres Recommandés")
+
+    titre("Paramètres recommandés")
+
     ligne("Dose recommandée", f"{patient.get('Dose', 'Non renseigné')} mGy")
     ligne("SNR estimé", patient.get("SNR", "Non renseigné"))
     ligne("kVp", patient.get("kVp", "Non renseigné"))
@@ -234,38 +353,52 @@ def generer_pdf(patient):
     ligne("DLP", f"{patient.get('DLP', 'Non renseigné')} mGy.cm")
 
     y -= 10
+
     titre("Recommandation IA")
 
     reco = str(patient.get("Recommandation", "Non renseigné"))
+
     pdf.setFont("Helvetica", 11)
 
     for i in range(0, len(reco), 80):
+
         pdf.drawString(60, y, reco[i:i+80])
+
         y -= 18
 
     y -= 20
+
     titre("Conclusion")
 
     snr_value = patient.get("SNR", 0)
+
     try:
         snr_value = float(snr_value)
+
     except:
         snr_value = 0
 
     conclusion = (
+
         "Qualité image acceptable."
+
         if snr_value >= 50
+
         else "Qualité image insuffisante : ajustement recommandé."
     )
 
     pdf.setFont("Helvetica", 11)
+
     pdf.drawString(60, y, conclusion)
 
     pdf.setFont("Helvetica-Oblique", 9)
+
     pdf.drawString(50, 30, "PCCT Intelligent System")
 
     pdf.save()
+
     buffer.seek(0)
+
     return buffer
 
 # =========================
@@ -275,33 +408,33 @@ st.sidebar.title("PCCT Intelligent System")
 
 menu = st.sidebar.radio(
     "Navigation",
-    ["Accueil", "Technicien", "SNR", "Suivi", "Maintenance", "Dashboard", "Rapport"]
+    [
+        "Accueil",
+        "Technicien",
+        "SNR",
+        "Dashboard",
+        "Rapport"
+    ]
 )
 
 # =========================
 # ACCUEIL
 # =========================
 if menu == "Accueil":
+
     set_bg("accueil.png")
 
     st.title("PCCT Intelligent System")
-    st.subheader("Optimisation intelligente de dose, SNR et maintenance prédictive")
 
-    st.markdown("""
-    <div class="card">
-    <h3>Objectif de l'application</h3>
-    <p>
-    Cette plateforme propose une dose adaptée au patient tout en conservant
-    une qualité d'image acceptable, puis surveille l'état du scanner pour anticiper
-    les besoins de maintenance.
-    </p>
-    </div>
-    """, unsafe_allow_html=True)
+    st.subheader(
+        "Optimisation intelligente de dose et qualité image"
+    )
 
 # =========================
 # TECHNICIEN
 # =========================
 elif menu == "Technicien":
+
     set_bg("technicien.png")
 
     st.title("Espace Technicien")
@@ -309,12 +442,22 @@ elif menu == "Technicien":
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown('<div class="card">', unsafe_allow_html=True)
+
+        st.markdown(
+            '<div class="card">',
+            unsafe_allow_html=True
+        )
 
         nom = st.text_input("Nom")
+
         prenom = st.text_input("Prénom")
+
         cin = st.text_input("CIN")
-        sexe = st.selectbox("Sexe", ["Homme", "Femme"])
+
+        sexe = st.selectbox(
+            "Sexe",
+            ["Homme", "Femme"]
+        )
 
         type_examen = st.selectbox(
             "Type d'examen",
@@ -330,209 +473,388 @@ elif menu == "Technicien":
             ]
         )
 
-        age = st.number_input("Âge", 1, 120, 45)
-        poids = st.number_input("Poids (kg)", 20.0, 200.0, 70.0)
-        taille = st.number_input("Taille (cm)", 100.0, 220.0, 170.0)
+        age = st.number_input(
+            "Âge",
+            1,
+            120,
+            45
+        )
 
-        bouton = st.button("Calculer et enregistrer")
+        poids = st.number_input(
+            "Poids (kg)",
+            20.0,
+            200.0,
+            70.0
+        )
 
-        st.markdown('</div>', unsafe_allow_html=True)
+        taille = st.number_input(
+            "Taille (cm)",
+            100.0,
+            220.0,
+            170.0
+        )
+
+        bouton = st.button(
+            "Calculer et enregistrer"
+        )
+
+        st.markdown(
+            '</div>',
+            unsafe_allow_html=True
+        )
 
     imc = calcul_imc(poids, taille)
-    dose = dose_adaptee(age, imc, type_examen)
-    snr = calcul_snr(age, imc, dose)
-    kvp, mas, ctdi, dlp = adaptation_parametres(age, imc, type_examen, dose, snr)
-    reco = recommandation_ia(snr, dose, imc)
+
+    dose = dose_adaptee(
+        age,
+        imc,
+        type_examen
+    )
+
+    snr = calcul_snr(
+        age,
+        imc,
+        dose
+    )
+
+    kvp, mas, ctdi, dlp = adaptation_parametres(
+        age,
+        imc,
+        type_examen,
+        dose,
+        snr
+    )
+
+    reco = recommandation_ia(
+        snr,
+        dose,
+        imc
+    )
 
     with col2:
-        st.metric("IMC", round(imc, 2))
-        st.metric("Classe IMC", classe_imc(imc))
-        st.metric("Dose recommandée", f"{dose} mGy")
-        st.metric("SNR estimé", snr)
-        st.metric("kVp recommandé", kvp)
-        st.metric("mAs recommandé", mas)
-        st.metric("CTDIvol", f"{ctdi} mGy")
-        st.metric("DLP", f"{dlp} mGy.cm")
 
-        if snr >= 50:
-            st.success("Qualité image acceptable")
-        else:
-            st.error("SNR insuffisant")
+        st.metric(
+            "IMC",
+            round(imc, 2)
+        )
 
-        st.info(f"Recommandation IA : {reco}")
+        st.metric(
+            "Classe IMC",
+            classe_imc(imc)
+        )
 
+        st.metric(
+            "Dose recommandée",
+            f"{dose} mGy"
+        )
+
+        st.metric(
+            "SNR estimé",
+            snr
+        )
+
+        st.metric(
+            "kVp recommandé",
+            kvp
+        )
+
+        st.metric(
+            "mAs recommandé",
+            mas
+        )
+
+        st.metric(
+            "CTDIvol",
+            f"{ctdi} mGy"
+        )
+
+        st.metric(
+            "DLP",
+            f"{dlp} mGy.cm"
+        )
+
+        st.info(
+            f"Recommandation IA : {reco}"
+        )
+
+    # =========================
+    # ENREGISTREMENT PATIENT
+    # =========================
     if bouton:
-        patient = {
-            "Date": datetime.now().strftime("%Y-%m-%d %H:%M"),
-            "Nom": nom,
-            "Prénom": prenom,
-            "CIN": cin,
-            "Sexe": sexe,
-            "Type examen": type_examen,
-            "Age": age,
-            "Poids": poids,
-            "Taille": taille,
-            "IMC": round(imc, 2),
-            "Classe IMC": classe_imc(imc),
-            "Dose": dose,
-            "SNR": snr,
-            "kVp": kvp,
-            "mAs": mas,
-            "CTDIvol": ctdi,
-            "DLP": dlp,
-            "Recommandation": reco
-        }
 
-        st.session_state.patients.append(patient)
-        st.success("Patient ajouté à la liste des rapports.")
+        if cin.strip() == "":
+
+            st.error(
+                "Veuillez entrer le CIN du patient."
+            )
+
+        else:
+
+            patient_existe = any(
+                p.get("CIN", "").strip().upper()
+                == cin.strip().upper()
+                for p in st.session_state.patients
+            )
+
+            if patient_existe:
+
+                st.warning(
+                    "Ce patient est déjà enregistré."
+                )
+
+            else:
+
+                patient = {
+
+                    "Date": datetime.now().strftime(
+                        "%Y-%m-%d %H:%M"
+                    ),
+
+                    "Nom": nom,
+
+                    "Prénom": prenom,
+
+                    "CIN": cin,
+
+                    "Sexe": sexe,
+
+                    "Type examen": type_examen,
+
+                    "Age": age,
+
+                    "Poids": poids,
+
+                    "Taille": taille,
+
+                    "IMC": round(imc, 2),
+
+                    "Classe IMC": classe_imc(imc),
+
+                    "Dose": dose,
+
+                    "SNR": snr,
+
+                    "kVp": kvp,
+
+                    "mAs": mas,
+
+                    "CTDIvol": ctdi,
+
+                    "DLP": dlp,
+
+                    "Recommandation": reco
+                }
+
+                st.session_state.patients.append(
+                    patient
+                )
+
+                st.success(
+                    "Le patient a été bien enregistré."
+                )
 
 # =========================
 # RAPPORT
 # =========================
 elif menu == "Rapport":
+
     set_bg("rapport.png")
 
     st.title("Rapports Patients")
 
     if len(st.session_state.patients) == 0:
-        st.warning("Aucun patient enregistré. Va d'abord dans l'espace Technicien.")
-    else:
-        df_patients = pd.DataFrame(st.session_state.patients)
 
-        st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.subheader("Liste des patients enregistrés")
-        st.dataframe(df_patients, use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
-
-        patient_index = st.selectbox(
-            "Choisir un patient pour générer son rapport PDF",
-            df_patients.index,
-            format_func=lambda x:
-            f"{df_patients.loc[x].get('Nom', '')} {df_patients.loc[x].get('Prénom', '')} "
-            f"- {df_patients.loc[x].get('Type examen', '')}"
+        st.warning(
+            "Aucun patient enregistré."
         )
 
-        patient = df_patients.loc[patient_index].to_dict()
+    else:
 
-        st.markdown('<div class="card">', unsafe_allow_html=True)
+        df_patients = pd.DataFrame(
+            st.session_state.patients
+        )
 
-        st.subheader("Aperçu du rapport sélectionné")
+        st.markdown(
+            '<div class="card">',
+            unsafe_allow_html=True
+        )
 
-        st.write(f"**Nom :** {patient.get('Nom', 'Non renseigné')}")
-        st.write(f"**Prénom :** {patient.get('Prénom', 'Non renseigné')}")
-        st.write(f"**CIN :** {patient.get('CIN', 'Non renseigné')}")
-        st.write(f"**Sexe :** {patient.get('Sexe', 'Non renseigné')}")
-        st.write(f"**Type d'examen :** {patient.get('Type examen', 'Non renseigné')}")
-        st.write(f"**IMC :** {patient.get('IMC', 'Non renseigné')} — {patient.get('Classe IMC', 'Non renseigné')}")
-        st.write(f"**Dose recommandée :** {patient.get('Dose', 'Non renseigné')} mGy")
-        st.write(f"**SNR estimé :** {patient.get('SNR', 'Non renseigné')}")
-        st.write(f"**kVp :** {patient.get('kVp', 'Non renseigné')}")
-        st.write(f"**mAs :** {patient.get('mAs', 'Non renseigné')}")
-        st.write(f"**CTDIvol :** {patient.get('CTDIvol', 'Non renseigné')} mGy")
-        st.write(f"**DLP :** {patient.get('DLP', 'Non renseigné')} mGy.cm")
-        st.info(patient.get("Recommandation", "Non renseigné"))
+        st.subheader(
+            "Liste des patients enregistrés"
+        )
+
+        st.dataframe(
+            df_patients,
+            use_container_width=True
+        )
+
+        st.markdown(
+            '</div>',
+            unsafe_allow_html=True
+        )
+
+        patient_index = st.selectbox(
+            "Choisir un patient",
+            df_patients.index,
+            format_func=lambda x:
+            f"{df_patients.loc[x, 'Nom']} "
+            f"{df_patients.loc[x, 'Prénom']} "
+            f"- {df_patients.loc[x, 'Type examen']}"
+        )
+
+        patient = df_patients.loc[
+            patient_index
+        ].to_dict()
+
+        st.markdown(
+            '<div class="card">',
+            unsafe_allow_html=True
+        )
+
+        st.subheader(
+            "Aperçu du rapport"
+        )
+
+        st.write(
+            f"**Nom :** {patient.get('Nom')}"
+        )
+
+        st.write(
+            f"**Prénom :** {patient.get('Prénom')}"
+        )
+
+        st.write(
+            f"**CIN :** {patient.get('CIN')}"
+        )
+
+        st.write(
+            f"**Sexe :** {patient.get('Sexe')}"
+        )
+
+        st.write(
+            f"**Type d'examen :** "
+            f"{patient.get('Type examen')}"
+        )
+
+        st.write(
+            f"**IMC :** "
+            f"{patient.get('IMC')}"
+        )
+
+        st.write(
+            f"**Dose :** "
+            f"{patient.get('Dose')} mGy"
+        )
+
+        st.write(
+            f"**SNR :** "
+            f"{patient.get('SNR')}"
+        )
 
         pdf_file = generer_pdf(patient)
 
         st.download_button(
             "Télécharger le rapport PDF",
             data=pdf_file,
-            file_name=f"rapport_{patient.get('Nom','patient')}_{patient.get('Prénom','')}.pdf",
+            file_name=f"rapport_{patient.get('Nom')}.pdf",
             mime="application/pdf"
         )
 
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown(
+            '</div>',
+            unsafe_allow_html=True
+        )
 
 # =========================
 # SNR
 # =========================
 elif menu == "SNR":
+
     set_bg("snr.png")
+
     st.title("Analyse SNR")
 
-    imc_v = st.slider("IMC", 15, 45, 25)
-    age_v = st.slider("Âge", 10, 90, 40)
+    imc_v = st.slider(
+        "IMC",
+        15,
+        45,
+        25
+    )
+
+    age_v = st.slider(
+        "Âge",
+        10,
+        90,
+        40
+    )
 
     doses = np.linspace(3, 60, 40)
-    snrs = [calcul_snr(age_v, imc_v, d) for d in doses]
 
-    df = pd.DataFrame({"Dose": doses, "SNR": snrs})
-    st.line_chart(df.set_index("Dose"))
+    snrs = [
+        calcul_snr(age_v, imc_v, d)
+        for d in doses
+    ]
 
-# =========================
-# SUIVI
-# =========================
-elif menu == "Suivi":
-    set_bg("suivi.png")
-    st.title("Suivi Scanner")
+    df = pd.DataFrame({
+        "Dose": doses,
+        "SNR": snrs
+    })
 
-    snr_sys = st.number_input("SNR système", 10.0, 100.0, 52.0)
-    temp = st.number_input("Température tube RX (°C)", 20.0, 120.0, 60.0)
-    vibration = st.slider("Vibration gantry (%)", 0, 100, 25)
-    heures = st.number_input("Heures d'utilisation du scanner", 0, 50000, 5000)
-
-    score = stress_score(snr_sys, temp, vibration, heures)
-    etat = etat_systeme(score)
-
-    st.metric("Score de stress système", score)
-    st.metric("État système", etat)
-
-    if etat == "Stable":
-        st.success("Scanner stable")
-    elif etat == "À surveiller":
-        st.warning("Scanner à surveiller")
-    else:
-        st.error("Risque élevé : maintenance recommandée")
-
-# =========================
-# MAINTENANCE
-# =========================
-elif menu == "Maintenance":
-    set_bg("maintenance.png")
-    st.title("Maintenance prédictive")
-
-    snr_sys = st.number_input("SNR système", 10.0, 100.0, 48.0)
-    temp = st.number_input("Température tube RX (°C)", 20.0, 120.0, 78.0)
-    vibration = st.slider("Vibration gantry (%)", 0, 100, 55)
-    heures = st.number_input("Heures d'utilisation", 0, 50000, 12000)
-
-    score = stress_score(snr_sys, temp, vibration, heures)
-    etat = etat_systeme(score)
-
-    st.metric("Score maintenance", score)
-    st.metric("État", etat)
-
-    if etat == "Stable":
-        st.success("Fonctionnement normal")
-    elif etat == "À surveiller":
-        st.warning("Contrôle préventif recommandé")
-    else:
-        st.error("Inspection tube RX / détecteurs recommandée")
+    st.line_chart(
+        df.set_index("Dose")
+    )
 
 # =========================
 # DASHBOARD
 # =========================
 elif menu == "Dashboard":
+
     set_bg("rapport.png")
+
     st.title("Dashboard global")
 
     if len(st.session_state.patients) == 0:
-        st.warning("Aucun patient enregistré pour le moment.")
+
+        st.warning(
+            "Aucun patient enregistré."
+        )
+
     else:
-        df_patients = pd.DataFrame(st.session_state.patients)
+
+        df_patients = pd.DataFrame(
+            st.session_state.patients
+        )
 
         col1, col2, col3 = st.columns(3)
-        col1.metric("Nombre patients", len(df_patients))
-        col2.metric("Dose moyenne", round(df_patients["Dose"].mean(), 2))
-        col3.metric("SNR moyen", round(df_patients["SNR"].mean(), 2))
 
-        st.dataframe(df_patients, use_container_width=True)
-        st.line_chart(df_patients[["Dose", "SNR"]])
+        col1.metric(
+            "Nombre patients",
+            len(df_patients)
+        )
 
-        csv = df_patients.to_csv(index=False).encode("utf-8")
-        st.download_button(
-            "Télécharger historique CSV",
-            csv,
-            file_name="historique_patients.csv",
-            mime="text/csv"
+        col2.metric(
+            "Dose moyenne",
+            round(
+                df_patients["Dose"].mean(),
+                2
+            )
+        )
+
+        col3.metric(
+            "SNR moyen",
+            round(
+                df_patients["SNR"].mean(),
+                2
+            )
+        )
+
+        st.dataframe(
+            df_patients,
+            use_container_width=True
+        )
+
+        st.line_chart(
+            df_patients[
+                ["Dose", "SNR"]
+            ]
         )
