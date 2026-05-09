@@ -632,11 +632,42 @@ elif menu == "Dashboard":
 
         st.line_chart(df_patients[["Dose", "SNR"]])
 
-        csv = df_patients.to_csv(index=False).encode("utf-8")
+       from io import BytesIO
 
-        st.download_button(
-            "Télécharger historique CSV",
-            csv,
-            file_name="historique_patients.csv",
-            mime="text/csv"
+excel_buffer = BytesIO()
+
+with pd.ExcelWriter(
+    excel_buffer,
+    engine="openpyxl"
+) as writer:
+
+    df_patients.to_excel(
+        writer,
+        index=False,
+        sheet_name="Patients"
+    )
+
+    worksheet = writer.sheets["Patients"]
+
+    # Ajuster largeur colonnes
+    for column_cells in worksheet.columns:
+
+        longueur = max(
+            len(str(cell.value))
+            if cell.value is not None else 0
+            for cell in column_cells
+        )
+
+        worksheet.column_dimensions[
+            column_cells[0].column_letter
+        ].width = longueur + 4
+
+excel_buffer.seek(0)
+
+st.download_button(
+    "Télécharger historique Excel",
+    data=excel_buffer,
+    file_name="historique_patients.xlsx",
+    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+)
         )
