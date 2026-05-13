@@ -14,7 +14,7 @@ st.set_page_config(page_title="PCCT Intelligent System", layout="wide")
 DB_NAME = "patients_pcct.db"
 
 # =========================
-# LOGIN
+# LOGIN FIXE
 # =========================
 if "connecte" not in st.session_state:
     st.session_state.connecte = False
@@ -29,25 +29,31 @@ def page_login():
     st.title("Connexion au système PCCT")
 
     nom = st.text_input("Nom utilisateur")
-    identifiant = st.text_input("ID utilisateur")
+    identifiant = st.text_input("ID utilisateur", type="password")
 
-    st.info("Exemples : TECH001 pour technicien / ING001 pour ingénieur biomédical")
+    st.info("""
+    Comptes autorisés :
+    
+    Technicien : Yassine Abidan — ID : 12345  
+    Ingénieure biomédicale : Khadija ABIDAN — ID : 67890
+    """)
 
     if st.button("Se connecter"):
-        if nom.strip() == "" or identifiant.strip() == "":
-            st.error("Veuillez entrer le nom et l'ID.")
-        elif identifiant.upper().startswith("TECH"):
+
+        if nom.strip().lower() == "yassine abidan" and identifiant == "12345":
             st.session_state.connecte = True
-            st.session_state.role = "Technicien"
-            st.session_state.nom_utilisateur = nom
+            st.session_state.role = "Technicien de radiologie"
+            st.session_state.nom_utilisateur = "Yassine Abidan"
             st.rerun()
-        elif identifiant.upper().startswith("ING"):
+
+        elif nom.strip().lower() == "khadija abidan" and identifiant == "67890":
             st.session_state.connecte = True
-            st.session_state.role = "Ingénieur biomédical"
-            st.session_state.nom_utilisateur = nom
+            st.session_state.role = "Ingénieure biomédicale"
+            st.session_state.nom_utilisateur = "Khadija ABIDAN"
             st.rerun()
+
         else:
-            st.error("ID invalide. Utiliser TECH001 ou ING001.")
+            st.error("Nom ou ID incorrect.")
 
 if not st.session_state.connecte:
     page_login()
@@ -162,24 +168,12 @@ def ajouter_patient(patient):
         )
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
-            patient["Date"],
-            patient["Nom"],
-            patient["Prénom"],
-            patient["CIN"],
-            patient["Sexe"],
-            patient["Type examen"],
-            patient["Age"],
-            patient["Poids"],
-            patient["Taille"],
-            patient["IMC"],
-            patient["Classe IMC"],
-            patient["Dose"],
-            patient["SNR"],
-            patient["kVp"],
-            patient["mAs"],
-            patient["CTDIvol"],
-            patient["DLP"],
-            patient["Recommandation"]
+            patient["Date"], patient["Nom"], patient["Prénom"], patient["CIN"],
+            patient["Sexe"], patient["Type examen"], patient["Age"],
+            patient["Poids"], patient["Taille"], patient["IMC"],
+            patient["Classe IMC"], patient["Dose"], patient["SNR"],
+            patient["kVp"], patient["mAs"], patient["CTDIvol"],
+            patient["DLP"], patient["Recommandation"]
         ))
 
         conn.commit()
@@ -208,25 +202,12 @@ def modifier_patient(patient_id, patient):
         dose=?, snr=?, kvp=?, mas=?, ctdivol=?, dlp=?, recommandation=?
     WHERE id=?
     """, (
-        patient["Date"],
-        patient["Nom"],
-        patient["Prénom"],
-        patient["CIN"],
-        patient["Sexe"],
-        patient["Type examen"],
-        patient["Age"],
-        patient["Poids"],
-        patient["Taille"],
-        patient["IMC"],
-        patient["Classe IMC"],
-        patient["Dose"],
-        patient["SNR"],
-        patient["kVp"],
-        patient["mAs"],
-        patient["CTDIvol"],
-        patient["DLP"],
-        patient["Recommandation"],
-        patient_id
+        patient["Date"], patient["Nom"], patient["Prénom"], patient["CIN"],
+        patient["Sexe"], patient["Type examen"], patient["Age"],
+        patient["Poids"], patient["Taille"], patient["IMC"],
+        patient["Classe IMC"], patient["Dose"], patient["SNR"],
+        patient["kVp"], patient["mAs"], patient["CTDIvol"],
+        patient["DLP"], patient["Recommandation"], patient_id
     ))
 
     conn.commit()
@@ -390,14 +371,12 @@ def generer_pdf(patient):
     buffer = BytesIO()
     pdf = canvas.Canvas(buffer, pagesize=A4)
     largeur, hauteur = A4
-
     y = hauteur - 60
 
     pdf.setFont("Helvetica-Bold", 20)
     pdf.drawString(190, y, "Rapport Patient")
 
     y -= 50
-
     pdf.setFont("Helvetica", 11)
     pdf.drawString(50, y, f"Date : {patient.get('date', patient.get('Date', ''))}")
 
@@ -500,17 +479,18 @@ if st.sidebar.button("Déconnexion"):
     st.session_state.nom_utilisateur = ""
     st.rerun()
 
-if st.session_state.role == "Technicien":
-    menu = st.sidebar.radio(
-        "Navigation",
-        ["Accueil", "Technicien", "SNR", "Dashboard", "Rapport"]
-    )
-
-else:
-    menu = st.sidebar.radio(
-        "Navigation",
-        ["Accueil", "Maintenance", "Dashboard", "Validation", "Rapport"]
-    )
+menu = st.sidebar.radio(
+    "Navigation",
+    [
+        "Accueil",
+        "Technicien",
+        "SNR",
+        "Maintenance",
+        "Dashboard",
+        "Validation",
+        "Rapport"
+    ]
+)
 
 # =========================
 # ACCUEIL
@@ -579,7 +559,6 @@ elif menu == "Technicien":
 
     else:
         patient = None
-
         with col2:
             st.metric("IMC", 0)
             st.metric("Classe IMC", "Non calculé")
