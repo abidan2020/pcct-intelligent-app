@@ -26,30 +26,42 @@ if "nom_utilisateur" not in st.session_state:
     st.session_state.nom_utilisateur = ""
 
 def page_login():
+
     st.title("Connexion au système PCCT")
 
     nom = st.text_input("Nom utilisateur")
-    identifiant = st.text_input("ID utilisateur", type="password")
 
-    st.info("""
-    Comptes autorisés :
-    
-    Technicien : Yassine Abidan — ID : 12345  
-    Ingénieure biomédicale : Khadija ABIDAN — ID : 67890
-    """)
+    identifiant = st.text_input(
+        "ID utilisateur",
+        type="password"
+    )
 
     if st.button("Se connecter"):
 
-        if nom.strip().lower() == "yassine abidan" and identifiant == "12345":
+        # TECHNICIEN
+        if (
+            nom.strip().lower() == "yassine abidan"
+            and identifiant == "12345"
+        ):
+
             st.session_state.connecte = True
             st.session_state.role = "Technicien de radiologie"
             st.session_state.nom_utilisateur = "Yassine Abidan"
+
+            st.success("Connexion technicien réussie.")
             st.rerun()
 
-        elif nom.strip().lower() == "khadija abidan" and identifiant == "67890":
+        # INGENIEURE
+        elif (
+            nom.strip().lower() == "khadija abidan"
+            and identifiant == "67890"
+        ):
+
             st.session_state.connecte = True
             st.session_state.role = "Ingénieure biomédicale"
             st.session_state.nom_utilisateur = "Khadija ABIDAN"
+
+            st.success("Connexion ingénieure réussie.")
             st.rerun()
 
         else:
@@ -58,7 +70,6 @@ def page_login():
 if not st.session_state.connecte:
     page_login()
     st.stop()
-
 # =========================
 # BACKGROUND
 # =========================
