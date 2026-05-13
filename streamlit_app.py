@@ -14,6 +14,46 @@ st.set_page_config(page_title="PCCT Intelligent System", layout="wide")
 DB_NAME = "patients_pcct.db"
 
 # =========================
+# LOGIN
+# =========================
+if "connecte" not in st.session_state:
+    st.session_state.connecte = False
+
+if "role" not in st.session_state:
+    st.session_state.role = ""
+
+if "nom_utilisateur" not in st.session_state:
+    st.session_state.nom_utilisateur = ""
+
+def page_login():
+    st.title("Connexion au système PCCT")
+
+    nom = st.text_input("Nom utilisateur")
+    identifiant = st.text_input("ID utilisateur")
+
+    st.info("Exemples : TECH001 pour technicien / ING001 pour ingénieur biomédical")
+
+    if st.button("Se connecter"):
+        if nom.strip() == "" or identifiant.strip() == "":
+            st.error("Veuillez entrer le nom et l'ID.")
+        elif identifiant.upper().startswith("TECH"):
+            st.session_state.connecte = True
+            st.session_state.role = "Technicien"
+            st.session_state.nom_utilisateur = nom
+            st.rerun()
+        elif identifiant.upper().startswith("ING"):
+            st.session_state.connecte = True
+            st.session_state.role = "Ingénieur biomédical"
+            st.session_state.nom_utilisateur = nom
+            st.rerun()
+        else:
+            st.error("ID invalide. Utiliser TECH001 ou ING001.")
+
+if not st.session_state.connecte:
+    page_login()
+    st.stop()
+
+# =========================
 # BACKGROUND
 # =========================
 def get_base64_image(path):
@@ -203,10 +243,14 @@ def supprimer_patient(patient_id):
 # CALCULS
 # =========================
 def calcul_imc(poids, taille):
+    if taille <= 0:
+        return 0
     return poids / ((taille / 100) ** 2)
 
 def classe_imc(imc):
-    if imc < 18.5:
+    if imc == 0:
+        return "Non calculé"
+    elif imc < 18.5:
         return "Maigreur"
     elif imc < 25:
         return "Normal"
@@ -443,20 +487,30 @@ examens = [
     "Scanner corps entier"
 ]
 
+# =========================
+# SIDEBAR
+# =========================
 st.sidebar.title("PCCT Intelligent System")
+st.sidebar.write(f"Utilisateur : {st.session_state.nom_utilisateur}")
+st.sidebar.write(f"Rôle : {st.session_state.role}")
 
-menu = st.sidebar.radio(
-    "Navigation",
-    [
-        "Accueil",
-        "Technicien",
-        "SNR",
-        "Maintenance",
-        "Dashboard",
-        "Validation",
-        "Rapport"
-    ]
-)
+if st.sidebar.button("Déconnexion"):
+    st.session_state.connecte = False
+    st.session_state.role = ""
+    st.session_state.nom_utilisateur = ""
+    st.rerun()
+
+if st.session_state.role == "Technicien":
+    menu = st.sidebar.radio(
+        "Navigation",
+        ["Accueil", "Technicien", "SNR", "Dashboard", "Rapport"]
+    )
+
+else:
+    menu = st.sidebar.radio(
+        "Navigation",
+        ["Accueil", "Maintenance", "Dashboard", "Validation", "Rapport"]
+    )
 
 # =========================
 # ACCUEIL
@@ -473,9 +527,6 @@ if menu == "Accueil":
     <p>
     Cette application simule un système intelligent pour adapter la dose scanner
     selon le patient, préserver un SNR acceptable et suivre l'état du scanner.
-    </p>
-    <p>
-    Les valeurs sont simulées et doivent être validées cliniquement avant toute utilisation réelle.
     </p>
     </div>
     """, unsafe_allow_html=True)
@@ -497,36 +548,54 @@ elif menu == "Technicien":
         cin = st.text_input("CIN")
         sexe = st.selectbox("Sexe", ["Homme", "Femme"])
         type_examen = st.selectbox("Type d'examen", examens)
-        age = st.number_input("Âge", 1, 120, 45)
-        poids = st.number_input("Poids (kg)", 20.0, 200.0, 70.0)
-        taille = st.number_input("Taille (cm)", 100.0, 220.0, 170.0)
+
+        age = st.number_input("Âge", min_value=0, max_value=120, value=0)
+        poids = st.number_input("Poids (kg)", min_value=0.0, max_value=200.0, value=0.0)
+        taille = st.number_input("Taille (cm)", min_value=0.0, max_value=220.0, value=0.0)
 
         bouton = st.button("Calculer et enregistrer")
 
         st.markdown('</div>', unsafe_allow_html=True)
 
-    patient = creer_patient(nom, prenom, cin, sexe, type_examen, age, poids, taille)
+    if age > 0 and poids > 0 and taille > 0:
+        patient = creer_patient(nom, prenom, cin, sexe, type_examen, age, poids, taille)
 
-    with col2:
-        st.metric("IMC", patient["IMC"])
-        st.metric("Classe IMC", patient["Classe IMC"])
-        st.metric("Dose recommandée", f"{patient['Dose']} mGy")
-        st.metric("SNR estimé", patient["SNR"])
-        st.metric("kVp recommandé", patient["kVp"])
-        st.metric("mAs recommandé", patient["mAs"])
-        st.metric("CTDIvol", f"{patient['CTDIvol']} mGy")
-        st.metric("DLP", f"{patient['DLP']} mGy.cm")
+        with col2:
+            st.metric("IMC", patient["IMC"])
+            st.metric("Classe IMC", patient["Classe IMC"])
+            st.metric("Dose recommandée", f"{patient['Dose']} mGy")
+            st.metric("SNR estimé", patient["SNR"])
+            st.metric("kVp recommandé", patient["kVp"])
+            st.metric("mAs recommandé", patient["mAs"])
+            st.metric("CTDIvol", f"{patient['CTDIvol']} mGy")
+            st.metric("DLP", f"{patient['DLP']} mGy.cm")
 
-        if patient["SNR"] >= 50:
-            st.success("Qualité image acceptable")
-        else:
-            st.error("SNR insuffisant")
+            if patient["SNR"] >= 50:
+                st.success("Qualité image acceptable")
+            else:
+                st.error("SNR insuffisant")
 
-        st.info(patient["Recommandation"])
+            st.info(patient["Recommandation"])
+
+    else:
+        patient = None
+
+        with col2:
+            st.metric("IMC", 0)
+            st.metric("Classe IMC", "Non calculé")
+            st.metric("Dose recommandée", "0 mGy")
+            st.metric("SNR estimé", 0)
+            st.metric("kVp recommandé", 0)
+            st.metric("mAs recommandé", 0)
+            st.metric("CTDIvol", "0 mGy")
+            st.metric("DLP", "0 mGy.cm")
+            st.warning("Veuillez entrer les informations du patient pour lancer le calcul.")
 
     if bouton:
         if cin.strip() == "":
             st.error("Veuillez entrer le CIN.")
+        elif patient is None:
+            st.error("Veuillez entrer l'âge, le poids et la taille du patient.")
         else:
             ok = ajouter_patient(patient)
             if ok:
@@ -560,10 +629,10 @@ elif menu == "Maintenance":
     col1, col2 = st.columns(2)
 
     with col1:
-        snr_sys = st.number_input("SNR système", 10.0, 100.0, 52.0)
-        temp = st.number_input("Température tube RX (°C)", 20.0, 120.0, 60.0)
-        vibration = st.slider("Vibration gantry (%)", 0, 100, 25)
-        heures = st.number_input("Heures d'utilisation", 0, 50000, 5000)
+        snr_sys = st.number_input("SNR système", min_value=0.0, max_value=100.0, value=0.0)
+        temp = st.number_input("Température tube RX (°C)", min_value=0.0, max_value=120.0, value=0.0)
+        vibration = st.slider("Vibration gantry (%)", 0, 100, 0)
+        heures = st.number_input("Heures d'utilisation", min_value=0, max_value=50000, value=0)
 
     score = stress_score(snr_sys, temp, vibration, heures)
     etat = etat_systeme(score)
@@ -692,7 +761,7 @@ elif menu == "Validation":
 
     st.dataframe(df_val, use_container_width=True)
 
-    st.subheader("Comparaison Dose / SNR des cas de test")
+    st.subheader("Comparaison Dose / SNR")
     st.bar_chart(df_val.set_index("Cas test")[["Dose", "SNR"]])
 
     st.info(
@@ -728,7 +797,12 @@ elif menu == "Rapport":
             nom = st.text_input("Nom", patient["nom"])
             prenom = st.text_input("Prénom", patient["prenom"])
             cin = st.text_input("CIN", patient["cin"])
-            sexe = st.selectbox("Sexe", ["Homme", "Femme"], index=0 if patient["sexe"] == "Homme" else 1)
+
+            sexe = st.selectbox(
+                "Sexe",
+                ["Homme", "Femme"],
+                index=0 if patient["sexe"] == "Homme" else 1
+            )
 
             type_examen = st.selectbox(
                 "Type d'examen",
@@ -736,17 +810,20 @@ elif menu == "Rapport":
                 index=examens.index(patient["type_examen"]) if patient["type_examen"] in examens else 0
             )
 
-            age = st.number_input("Âge", 1, 120, int(patient["age"]))
-            poids = st.number_input("Poids (kg)", 20.0, 200.0, float(patient["poids"]))
-            taille = st.number_input("Taille (cm)", 100.0, 220.0, float(patient["taille"]))
+            age = st.number_input("Âge", 0, 120, int(patient["age"]))
+            poids = st.number_input("Poids (kg)", 0.0, 200.0, float(patient["poids"]))
+            taille = st.number_input("Taille (cm)", 0.0, 220.0, float(patient["taille"]))
 
             modifier = st.form_submit_button("Enregistrer modifications")
 
         if modifier:
-            p_mod = creer_patient(nom, prenom, cin, sexe, type_examen, age, poids, taille)
-            modifier_patient(patient_id, p_mod)
-            st.success("Patient modifié avec succès.")
-            st.rerun()
+            if age <= 0 or poids <= 0 or taille <= 0:
+                st.error("Veuillez entrer un âge, un poids et une taille valides.")
+            else:
+                p_mod = creer_patient(nom, prenom, cin, sexe, type_examen, age, poids, taille)
+                modifier_patient(patient_id, p_mod)
+                st.success("Patient modifié avec succès.")
+                st.rerun()
 
         st.subheader("Aperçu du rapport")
 
