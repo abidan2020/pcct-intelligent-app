@@ -10,51 +10,81 @@ from reportlab.pdfgen import canvas
 
 st.set_page_config(page_title="PROMAMEC PCCT Intelligent System", layout="wide")
 
-DB_NAME = "pcct_promamec.db"
+DB_NAME = "pcct_promamec_v2.db"
 
 # =========================
-# STYLE BLANC / VERT
+# STYLE PROMAMEC BLANC / VERT
 # =========================
 st.markdown("""
 <style>
 .stApp {
-    background: linear-gradient(135deg, #ffffff, #e9f8f1);
-    color: #064e3b;
+    background: linear-gradient(135deg, #ffffff 0%, #f4fbf7 45%, #e6f5ee 100%);
+    color: #12352f;
 }
+
 [data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #064e3b, #10b981);
+    background: linear-gradient(180deg, #0b7f5c, #0f9f72, #a7d8c2);
 }
+
 [data-testid="stSidebar"] * {
-    color: white;
+    color: white !important;
 }
-h1, h2, h3 {
-    color: #064e3b;
+
+h1, h2, h3, h4, h5, h6 {
+    color: #0b7f5c !important;
     font-weight: 700;
 }
+
+p, label, span, div {
+    color: #12352f;
+}
+
 .card {
     background: white;
-    padding: 22px;
+    padding: 24px;
     border-radius: 20px;
-    border: 1px solid #bbf7d0;
-    box-shadow: 0 4px 18px rgba(6, 78, 59, 0.15);
+    border: 1px solid #cdeee0;
+    box-shadow: 0 6px 20px rgba(11, 127, 92, 0.12);
     margin-bottom: 18px;
 }
+
+.soft-card {
+    background: linear-gradient(135deg, #ffffff, #eef9f3);
+    padding: 22px;
+    border-radius: 20px;
+    border: 1px solid #cdeee0;
+    box-shadow: 0 4px 16px rgba(11, 127, 92, 0.10);
+    margin-bottom: 16px;
+}
+
 .stButton>button {
-    background: #10b981;
+    background: #0b7f5c;
     color: white;
     border-radius: 12px;
     border: none;
     font-weight: bold;
+    padding: 0.6rem 1rem;
 }
+
 .stButton>button:hover {
-    background: #059669;
+    background: #096b4e;
     color: white;
 }
+
 [data-testid="stMetric"] {
     background: white;
-    padding: 12px;
-    border-radius: 15px;
-    border-left: 5px solid #10b981;
+    padding: 14px;
+    border-radius: 16px;
+    border-left: 5px solid #0b7f5c;
+    box-shadow: 0 3px 14px rgba(11,127,92,0.10);
+}
+
+[data-testid="stMetric"] * {
+    color: #12352f !important;
+}
+
+input, textarea {
+    color: #12352f !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -76,7 +106,7 @@ def login():
         st.markdown('<div class="card">', unsafe_allow_html=True)
 
         if os.path.exists("images/promamec.png"):
-            st.image("images/promamec.png", width=230)
+            st.image("images/promamec.png", width=240)
 
         st.title("PCCT Intelligent System")
         st.subheader("Connexion sécurisée")
@@ -172,19 +202,22 @@ init_db()
 # DATA
 # =========================
 SCANNERS = {
-    "Scanner PCCT-01": {
+    "NS-PCCT-2026-001": {
+        "nom": "Scanner PCCT-01",
         "marque": "Neusoft",
         "modele": "NeuViz Glory PCCT",
         "numero_serie": "NS-PCCT-2026-001",
         "localisation": "Service Radiologie"
     },
-    "Scanner PCCT-02": {
+    "NS-PCCT-2026-002": {
+        "nom": "Scanner PCCT-02",
         "marque": "Neusoft",
         "modele": "NeuViz Prime",
         "numero_serie": "NS-PCCT-2026-002",
         "localisation": "Urgences"
     },
-    "Scanner PCCT-03": {
+    "NS-PCCT-2026-003": {
+        "nom": "Scanner PCCT-03",
         "marque": "Neusoft",
         "modele": "NeuViz Epoch",
         "numero_serie": "NS-PCCT-2026-003",
@@ -310,12 +343,12 @@ def recommandation_patient(snr, dose, imc):
     else:
         return "Acquisition acceptable selon les paramètres estimés."
 
-def creer_patient(nom, prenom, cin, sexe, age, poids, taille, type_examen, protocole, scanner):
+def creer_patient(nom, prenom, cin, sexe, age, poids, taille, type_examen, protocole, numero_serie):
+    scanner = SCANNERS[numero_serie]
     imc = calcul_imc(poids, taille)
     dose = dose_adaptee(age, imc, type_examen, protocole)
     snr = calcul_snr(age, imc, dose)
     kvp, mas, ctdi, dlp = adaptation_parametres(age, imc, type_examen, dose, snr)
-    sc = SCANNERS[scanner]
 
     return {
         "date": datetime.now().strftime("%Y-%m-%d %H:%M"),
@@ -337,9 +370,9 @@ def creer_patient(nom, prenom, cin, sexe, age, poids, taille, type_examen, proto
         "mas": mas,
         "ctdi": ctdi,
         "dlp": dlp,
-        "scanner": scanner,
-        "marque": sc["marque"],
-        "numero_serie": sc["numero_serie"],
+        "scanner": scanner["nom"],
+        "marque": scanner["marque"],
+        "numero_serie": scanner["numero_serie"],
         "recommandation": recommandation_patient(snr, dose, imc)
     }
 
@@ -355,7 +388,13 @@ def save_patient(p):
             numero_serie, recommandation
         )
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, tuple(p.values()))
+        """, (
+            p["date"], p["nom"], p["prenom"], p["cin"], p["sexe"], p["age"],
+            p["poids"], p["taille"], p["type_examen"], p["protocole"],
+            p["imc"], p["classe_imc"], p["dose"], p["snr"], p["qualite_image"],
+            p["kvp"], p["mas"], p["ctdi"], p["dlp"], p["scanner"],
+            p["marque"], p["numero_serie"], p["recommandation"]
+        ))
         conn.commit()
         ok = True
     except sqlite3.IntegrityError:
@@ -372,16 +411,17 @@ def load_patients():
 # =========================
 # MAINTENANCE
 # =========================
-def generer_parametres_scanner(scanner):
-    if scanner == "Scanner PCCT-01":
+def generer_parametres_scanner(numero_serie):
+    if numero_serie == "NS-PCCT-2026-001":
         return 65, 45, 15, 18, 8500, "Stable", "Normal"
-    elif scanner == "Scanner PCCT-02":
+    elif numero_serie == "NS-PCCT-2026-002":
         return 48, 68, 42, 45, 22000, "Légère dégradation", "À surveiller"
     else:
         return 38, 86, 75, 70, 36000, "Dégradation importante", "Défaillant"
 
-def analyser_maintenance(scanner):
-    snr, temp, vibration, bruit, heures, detecteurs, refroidissement = generer_parametres_scanner(scanner)
+def analyser_maintenance(numero_serie):
+    scanner = SCANNERS[numero_serie]
+    snr, temp, vibration, bruit, heures, detecteurs, refroidissement = generer_parametres_scanner(numero_serie)
 
     score = 0
     score += max(0, 50 - snr) * 1.3
@@ -434,9 +474,11 @@ def analyser_maintenance(scanner):
         action = "Planifier une maintenance préventive"
 
     return {
-        "scanner": scanner,
-        "marque": SCANNERS[scanner]["marque"],
-        "numero_serie": SCANNERS[scanner]["numero_serie"],
+        "scanner": scanner["nom"],
+        "marque": scanner["marque"],
+        "modele": scanner["modele"],
+        "numero_serie": scanner["numero_serie"],
+        "localisation": scanner["localisation"],
         "snr_systeme": snr,
         "temperature": temp,
         "vibration": vibration,
@@ -494,7 +536,7 @@ def generer_pdf_patient(row):
     y = 800
 
     pdf.setFont("Helvetica-Bold", 18)
-    pdf.drawString(150, y, "Rapport Patient - PCCT Intelligent System")
+    pdf.drawString(120, y, "Rapport Patient - PCCT Intelligent System")
     y -= 40
 
     pdf.setFont("Helvetica", 11)
@@ -525,7 +567,7 @@ if st.sidebar.button("Déconnexion"):
 if st.session_state.role == "Technicien de radiologie":
     pages = ["Accueil", "Workflow acquisition", "SNR", "Dashboard", "Rapport"]
 else:
-    pages = ["Accueil", "Maintenance", "Dashboard", "Logs système", "Rapport"]
+    pages = ["Accueil", "Maintenance préventive", "Maintenance", "Dashboard", "Logs système", "Rapport"]
 
 menu = st.sidebar.radio("Navigation", pages)
 
@@ -534,27 +576,34 @@ menu = st.sidebar.radio("Navigation", pages)
 # =========================
 if menu == "Accueil":
     st.title("PROMAMEC PCCT Intelligent System")
-    st.subheader("Optimisation de dose, qualité image et maintenance prédictive")
 
-    c1, c2, c3 = st.columns(3)
-    for i, sc in enumerate(SCANNERS):
-        m = analyser_maintenance(sc)
-        with [c1, c2, c3][i]:
-            st.markdown('<div class="card">', unsafe_allow_html=True)
-            st.markdown(f"### {sc}")
-            st.write(f"**Marque :** {m['marque']}")
-            st.write(f"**N° série :** {m['numero_serie']}")
-            st.metric("État", f"{m['couleur']} {m['etat']}")
-            st.metric("Score stress", f"{m['score']} %")
-            st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown("""
+    <div class="card">
+    <h3>Objectif de l’application</h3>
+    <p>
+    Cette application a pour objectif de proposer un système intelligent appliqué au scanner Photon Counting CT.
+    Elle permet d’optimiser la dose délivrée au patient, d’évaluer la qualité image à travers le SNR et
+    d’aider à la surveillance biomédicale des scanners.
+    </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <div class="soft-card">
+    <h3>Présentation de PROMAMEC</h3>
+    <p>
+    PROMAMEC est une entreprise marocaine spécialisée dans la distribution, l’installation et la maintenance
+    des équipements médicaux et biomédicaux. Elle accompagne les établissements de santé dans l’amélioration
+    de leurs plateaux techniques à travers des solutions fiables, modernes et adaptées aux besoins cliniques.
+    </p>
+    </div>
+    """, unsafe_allow_html=True)
 
 # =========================
 # WORKFLOW ACQUISITION
 # =========================
 elif menu == "Workflow acquisition":
     st.title("Workflow d’acquisition patient")
-
-    st.markdown("### 1. Données patient")
 
     col1, col2 = st.columns(2)
 
@@ -570,26 +619,28 @@ elif menu == "Workflow acquisition":
         taille = st.number_input("Taille (cm)", 0.0, 220.0, 0.0)
         type_examen = st.selectbox("Type d’examen", EXAMENS)
         protocole = st.selectbox("Protocole", PROTOCOLES)
-        scanner = st.selectbox("Scanner", list(SCANNERS.keys()))
+        numero_serie = st.text_input("Numéro de série du scanner")
 
-    st.markdown("### 2. Scanner connecté")
-    sc = SCANNERS[scanner]
-
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Marque", sc["marque"])
-    c2.metric("Modèle", sc["modele"])
-    c3.metric("N° série", sc["numero_serie"])
+    if numero_serie in SCANNERS:
+        sc = SCANNERS[numero_serie]
+        st.success("Scanner reconnu.")
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Marque", sc["marque"])
+        c2.metric("Modèle", sc["modele"])
+        c3.metric("N° série", sc["numero_serie"])
+    elif numero_serie != "":
+        st.error("Numéro de série non reconnu.")
 
     if st.button("Lancer acquisition et analyse IA"):
-        if nom == "" or prenom == "" or cin == "" or age <= 0 or poids <= 0 or taille <= 0:
-            st.error("Veuillez compléter toutes les informations patient.")
+        if nom == "" or prenom == "" or cin == "" or age <= 0 or poids <= 0 or taille <= 0 or numero_serie not in SCANNERS:
+            st.error("Veuillez compléter toutes les informations.")
         else:
             progress = st.progress(0)
             status = st.empty()
 
             for i, txt in enumerate([
                 "Connexion scanner...",
-                "Acquisition des données patient...",
+                "Acquisition données patient...",
                 "Calcul IMC...",
                 "Optimisation dose...",
                 "Analyse SNR...",
@@ -598,7 +649,7 @@ elif menu == "Workflow acquisition":
                 status.info(txt)
                 progress.progress((i + 1) * 16)
 
-            p = creer_patient(nom, prenom, cin, sexe, age, poids, taille, type_examen, protocole, scanner)
+            p = creer_patient(nom, prenom, cin, sexe, age, poids, taille, type_examen, protocole, numero_serie)
             ok = save_patient(p)
 
             if ok:
@@ -606,7 +657,6 @@ elif menu == "Workflow acquisition":
             else:
                 st.warning("Patient déjà enregistré avec ce CIN.")
 
-            st.markdown("### Résultats")
             r1, r2, r3, r4 = st.columns(4)
             r1.metric("IMC", p["imc"])
             r2.metric("Dose", f"{p['dose']} mGy")
@@ -630,57 +680,100 @@ elif menu == "SNR":
     st.line_chart(df.set_index("Dose"))
 
 # =========================
+# MAINTENANCE PRÉVENTIVE
+# =========================
+elif menu == "Maintenance préventive":
+    st.title("Maintenance préventive du parc scanner")
+
+    st.markdown("""
+    <div class="card">
+    Cette page permet à l’ingénieur biomédical de suivre l’état global du parc scanner,
+    d’identifier les équipements nécessitant une surveillance et de planifier les actions de maintenance.
+    </div>
+    """, unsafe_allow_html=True)
+
+    rows = []
+    for serial in SCANNERS:
+        m = analyser_maintenance(serial)
+        rows.append({
+            "Scanner": m["scanner"],
+            "Marque": m["marque"],
+            "N° série": m["numero_serie"],
+            "Localisation": m["localisation"],
+            "État": m["etat"],
+            "Score stress": m["score"],
+            "Composant suspect": m["composant"]
+        })
+
+    st.dataframe(pd.DataFrame(rows), use_container_width=True)
+
+# =========================
 # MAINTENANCE
 # =========================
 elif menu == "Maintenance":
     st.title("Maintenance prédictive intelligente")
 
-    scanner = st.selectbox("Choisir le scanner", list(SCANNERS.keys()))
-    m = analyser_maintenance(scanner)
+    numero_serie = st.text_input("Entrer le numéro de série du scanner")
 
-    st.markdown("### Informations scanner")
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Marque", m["marque"])
-    c2.metric("N° série", m["numero_serie"])
-    c3.metric("État global", f"{m['couleur']} {m['etat']}")
+    if numero_serie == "":
+        st.info("Veuillez entrer le numéro de série pour afficher les paramètres du scanner.")
 
-    st.markdown("### Paramètres techniques calculés automatiquement")
-    a1, a2, a3, a4 = st.columns(4)
-    a1.metric("SNR système", m["snr_systeme"])
-    a2.metric("Température tube RX", f"{m['temperature']} °C")
-    a3.metric("Vibration gantry", f"{m['vibration']} %")
-    a4.metric("Bruit image", f"{m['bruit']} %")
+        a1, a2, a3, a4 = st.columns(4)
+        a1.text_input("SNR système", value="", disabled=True)
+        a2.text_input("Température tube RX", value="", disabled=True)
+        a3.text_input("Vibration gantry", value="", disabled=True)
+        a4.text_input("Bruit image", value="", disabled=True)
 
-    b1, b2, b3 = st.columns(3)
-    b1.metric("Heures utilisation", m["heures"])
-    b2.metric("Détecteurs", m["detecteurs"])
-    b3.metric("Refroidissement", m["refroidissement"])
+        b1, b2, b3 = st.columns(3)
+        b1.text_input("Heures utilisation", value="", disabled=True)
+        b2.text_input("État détecteurs", value="", disabled=True)
+        b3.text_input("Refroidissement", value="", disabled=True)
 
-    st.markdown("### Diagnostic IA")
-    d1, d2, d3 = st.columns(3)
-    d1.metric("Score stress", f"{m['score']} %")
-    d2.metric("Composant suspect", m["composant"])
-    d3.metric("État", m["etat"])
+    elif numero_serie not in SCANNERS:
+        st.error("Numéro de série non reconnu.")
 
-    st.write(f"**Cause probable :** {m['cause']}")
-    st.write(f"**Action recommandée :** {m['action']}")
-
-    if m["etat"] == "Stable":
-        st.success("Scanner stable. Aucune intervention urgente.")
-    elif m["etat"] == "À surveiller":
-        st.warning("Surveillance préventive recommandée.")
     else:
-        st.error("Risque élevé de panne. Intervention recommandée rapidement.")
+        m = analyser_maintenance(numero_serie)
 
-    dfm = pd.DataFrame({
-        "Paramètre": ["SNR", "Température", "Vibration", "Bruit", "Score stress"],
-        "Valeur": [m["snr_systeme"], m["temperature"], m["vibration"], m["bruit"], m["score"]]
-    })
-    st.bar_chart(dfm.set_index("Paramètre"))
+        st.success("Scanner reconnu.")
 
-    if st.button("Enregistrer le log maintenance"):
-        save_maintenance(m)
-        st.success("Log maintenance enregistré.")
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Marque", m["marque"])
+        c2.metric("Modèle", m["modele"])
+        c3.metric("N° série", m["numero_serie"])
+
+        st.markdown("### Paramètres techniques calculés automatiquement")
+
+        a1, a2, a3, a4 = st.columns(4)
+        a1.text_input("SNR système", value=str(m["snr_systeme"]), disabled=True)
+        a2.text_input("Température tube RX", value=f"{m['temperature']} °C", disabled=True)
+        a3.text_input("Vibration gantry", value=f"{m['vibration']} %", disabled=True)
+        a4.text_input("Bruit image", value=f"{m['bruit']} %", disabled=True)
+
+        b1, b2, b3 = st.columns(3)
+        b1.text_input("Heures utilisation", value=str(m["heures"]), disabled=True)
+        b2.text_input("État détecteurs", value=m["detecteurs"], disabled=True)
+        b3.text_input("Refroidissement", value=m["refroidissement"], disabled=True)
+
+        st.markdown("### Diagnostic IA")
+
+        d1, d2, d3 = st.columns(3)
+        d1.metric("Score stress", f"{m['score']} %")
+        d2.metric("État global", f"{m['couleur']} {m['etat']}")
+        d3.metric("Composant suspect", m["composant"])
+
+        st.write(f"**Cause probable :** {m['cause']}")
+        st.write(f"**Action recommandée :** {m['action']}")
+
+        dfm = pd.DataFrame({
+            "Paramètre": ["SNR", "Température", "Vibration", "Bruit", "Score stress"],
+            "Valeur": [m["snr_systeme"], m["temperature"], m["vibration"], m["bruit"], m["score"]]
+        })
+        st.bar_chart(dfm.set_index("Paramètre"))
+
+        if st.button("Enregistrer le log maintenance"):
+            save_maintenance(m)
+            st.success("Log maintenance enregistré.")
 
 # =========================
 # DASHBOARD
