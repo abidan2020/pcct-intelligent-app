@@ -7,13 +7,10 @@ import pandas as pd
 import numpy as np
 import sqlite3
 import os
-from io import BytesIO
 from datetime import datetime
-from reportlab.lib.pagesizes import A4
-from reportlab.pdfgen import canvas
 
 # =========================================================
-# CONFIG
+# CONFIGURATION
 # =========================================================
 
 st.set_page_config(
@@ -21,105 +18,180 @@ st.set_page_config(
     layout="wide"
 )
 
-DB_NAME = "pcct_promamec_v2.db"
+DB_NAME = "pcct_promamec.db"
 
 # =========================================================
-# STYLE PROMAMEC
+# STYLE PROFESSIONNEL PROMAMEC
 # =========================================================
 
 st.markdown("""
 <style>
 
-.stApp{
-    background:
-    linear-gradient(
+:root {
+    --main-green: #007A5E;
+    --dark-green: #004D3A;
+    --soft-green: #EAF7F2;
+    --light-green: #F6FCF9;
+    --text-dark: #173B35;
+    --border: #D8EFE7;
+}
+
+/* Page générale */
+.stApp {
+    background: linear-gradient(
         135deg,
         #ffffff 0%,
-        #f4fbf7 45%,
-        #e6f5ee 100%
+        #F6FCF9 55%,
+        #EAF7F2 100%
+    );
+    color: var(--text-dark);
+}
+
+/* Sidebar */
+[data-testid="stSidebar"] {
+    background: linear-gradient(
+        180deg,
+        #004D3A 0%,
+        #007A5E 60%,
+        #BFE7D8 100%
     );
 }
 
-[data-testid="stSidebar"]{
+[data-testid="stSidebar"] * {
+    color: white !important;
+}
+
+/* Titres */
+h1 {
+    color: var(--dark-green) !important;
+    font-size: 38px !important;
+    font-weight: 800 !important;
+}
+
+h2,h3,h4 {
+    color: var(--main-green) !important;
+    font-weight: 700 !important;
+}
+
+/* Cartes */
+.card {
+    background: rgba(255,255,255,0.96);
+    padding: 28px;
+    border-radius: 24px;
+    border: 1px solid var(--border);
+    box-shadow:
+    0 10px 28px rgba(0,77,58,0.10);
+    margin-bottom: 22px;
+}
+
+.hero-card {
+    background: linear-gradient(
+        135deg,
+        #ffffff,
+        #F0FBF6
+    );
+
+    padding: 35px;
+
+    border-radius: 28px;
+
+    border: 1px solid var(--border);
+
+    box-shadow:
+    0 12px 32px rgba(0,77,58,0.12);
+
+    margin-bottom: 25px;
+}
+
+/* Boutons */
+.stButton>button {
+
     background:
     linear-gradient(
-        180deg,
-        #0b7f5c,
-        #0f9f72,
-        #7fc8a9
+        90deg,
+        #007A5E,
+        #00A97A
     );
+
+    color:white !important;
+
+    border:none;
+
+    border-radius:14px;
+
+    font-weight:700;
+
+    padding:0.65rem 1.2rem;
+
+    box-shadow:
+    0 6px 14px rgba(0,122,94,0.25);
 }
 
-[data-testid="stSidebar"] *{
+.stButton>button:hover {
+
+    background:
+    linear-gradient(
+        90deg,
+        #004D3A,
+        #007A5E
+    );
+
     color:white !important;
 }
 
-h1,h2,h3,h4{
-    color:#0b7f5c !important;
+/* Inputs */
+input, textarea {
+
+    color:#173B35 !important;
+
+    background-color:white !important;
+
+    border-radius:10px !important;
 }
 
-p,label,span,div{
-    color:#12352f;
-}
-
-.card{
-    background:white;
-    padding:24px;
-    border-radius:20px;
-    border:1px solid #d4eee3;
-    box-shadow:
-    0 6px 20px rgba(11,127,92,0.12);
-    margin-bottom:18px;
-}
-
-.soft-card{
-    background:
-    linear-gradient(
-        135deg,
-        #ffffff,
-        #eef9f3
-    );
-
-    padding:22px;
-    border-radius:20px;
-    border:1px solid #d4eee3;
-    box-shadow:
-    0 4px 16px rgba(11,127,92,0.10);
-}
-
-.stButton>button{
-
-    background:#0b7f5c;
-    color:white;
-    border:none;
-    border-radius:12px;
-    font-weight:bold;
-    padding:0.6rem 1rem;
-}
-
-.stButton>button:hover{
-
-    background:#096b4e;
-    color:white;
-}
-
-[data-testid="stMetric"]{
+/* Metrics */
+[data-testid="stMetric"] {
 
     background:white;
-    padding:14px;
-    border-radius:16px;
-    border-left:5px solid #0b7f5c;
+
+    padding:18px;
+
+    border-radius:20px;
+
+    border:1px solid var(--border);
+
+    border-left:6px solid var(--main-green);
 
     box-shadow:
-    0 3px 14px rgba(11,127,92,0.10);
+    0 8px 20px rgba(0,77,58,0.10);
 }
 
-[data-testid="stMetric"] *{
-    color:#12352f !important;
+[data-testid="stMetric"] * {
+
+    color:#173B35 !important;
 }
 
-input, textarea{
-    color:#12352f !important;
+/* Login */
+.login-title {
+
+    text-align:center;
+
+    color:#004D3A;
+
+    font-size:34px;
+
+    font-weight:800;
+}
+
+.login-subtitle {
+
+    text-align:center;
+
+    color:#007A5E;
+
+    font-size:18px;
+
+    margin-bottom:20px;
 }
 
 </style>
@@ -144,7 +216,7 @@ if "nom_utilisateur" not in st.session_state:
 
 def login():
 
-    col1, col2, col3 = st.columns([1,2,1])
+    col1, col2, col3 = st.columns([1,1.6,1])
 
     with col2:
 
@@ -157,14 +229,18 @@ def login():
 
             st.image(
                 "imagespromamec.png",
-                width=260
+                width=240
             )
 
-        st.title("PCCT Intelligent System")
+        st.markdown(
+            '<div class="login-title">PCCT Intelligent System</div>',
+            unsafe_allow_html=True
+        )
 
-        st.subheader("Connexion sécurisée")
-
-        st.markdown("---")
+        st.markdown(
+            '<div class="login-subtitle">Plateforme intelligente PROMAMEC</div>',
+            unsafe_allow_html=True
+        )
 
         nom = st.text_input(
             "Nom utilisateur"
@@ -235,70 +311,32 @@ def init_db():
         id INTEGER PRIMARY KEY AUTOINCREMENT,
 
         date TEXT,
+
         nom TEXT,
+
         prenom TEXT,
-        cin TEXT UNIQUE,
+
+        cin TEXT,
 
         sexe TEXT,
+
         age INTEGER,
 
         poids REAL,
+
         taille REAL,
 
         type_examen TEXT,
+
         protocole TEXT,
 
         imc REAL,
-        classe_imc TEXT,
 
         dose REAL,
+
         snr REAL,
 
-        qualite_image TEXT,
-
-        kvp INTEGER,
-        mas INTEGER,
-
-        ctdi REAL,
-        dlp REAL,
-
-        scanner TEXT,
-        marque TEXT,
-        numero_serie TEXT,
-
-        recommandation TEXT
-    )
-
-    """)
-
-    c.execute("""
-
-    CREATE TABLE IF NOT EXISTS maintenance (
-
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-
-        date TEXT,
-
-        scanner TEXT,
-        marque TEXT,
-        numero_serie TEXT,
-
-        snr_systeme REAL,
-        temperature REAL,
-        vibration REAL,
-        bruit REAL,
-
-        heures INTEGER,
-
-        detecteurs TEXT,
-        refroidissement TEXT,
-
-        score REAL,
-        etat TEXT,
-
-        composant TEXT,
-        cause TEXT,
-        action TEXT
+        qualite TEXT
     )
 
     """)
@@ -319,27 +357,21 @@ SCANNERS = {
 
         "nom":"Scanner PCCT-01",
         "marque":"Neusoft",
-        "modele":"NeuViz Glory PCCT",
-        "numero_serie":"NS-PCCT-2026-001",
-        "localisation":"Radiologie"
+        "modele":"NeuViz Glory PCCT"
     },
 
     "NS-PCCT-2026-002": {
 
         "nom":"Scanner PCCT-02",
         "marque":"Neusoft",
-        "modele":"NeuViz Prime",
-        "numero_serie":"NS-PCCT-2026-002",
-        "localisation":"Urgences"
+        "modele":"NeuViz Prime"
     },
 
     "NS-PCCT-2026-003": {
 
         "nom":"Scanner PCCT-03",
         "marque":"Neusoft",
-        "modele":"NeuViz Epoch",
-        "numero_serie":"NS-PCCT-2026-003",
-        "localisation":"Cardiologie"
+        "modele":"NeuViz Epoch"
     }
 }
 
@@ -349,10 +381,7 @@ EXAMENS = [
     "Scanner thoracique",
     "Scanner abdominal",
     "Scanner cardiaque",
-    "Scanner pulmonaire",
-    "Scanner osseux",
-    "Scanner pelvien",
-    "Scanner corps entier"
+    "Scanner pulmonaire"
 ]
 
 PROTOCOLES = [
@@ -360,9 +389,7 @@ PROTOCOLES = [
     "Standard",
     "Low Dose",
     "Pédiatrique",
-    "Cardiaque",
-    "Trauma",
-    "Haute résolution"
+    "Cardiaque"
 ]
 
 # =========================================================
@@ -371,45 +398,24 @@ PROTOCOLES = [
 
 def calcul_imc(poids, taille):
 
-    if taille <= 0:
-        return 0
+    return poids / ((taille/100)**2)
 
-    return poids / ((taille / 100) ** 2)
+def calcul_dose(age, imc):
 
-def classe_imc(imc):
-
-    if imc < 18.5:
-        return "Maigreur"
-
-    elif imc < 25:
-        return "Normal"
-
-    elif imc < 30:
-        return "Surpoids"
-
-    else:
-        return "Obésité"
-
-def dose_adaptee(age, imc):
-
-    dose = (
-        12
-        + (imc * 0.25)
-        + (age * 0.03)
+    return round(
+        12 + (imc*0.25) + (age*0.03),
+        2
     )
-
-    return round(dose,2)
 
 def calcul_snr(age, imc, dose):
 
-    snr = (
+    return round(
         60
-        - (0.30 * imc)
-        - (0.05 * age)
-        + (0.70 * dose)
+        - (0.30*imc)
+        - (0.05*age)
+        + (0.70*dose),
+        2
     )
-
-    return round(max(snr,10),2)
 
 def qualite_image(snr):
 
@@ -425,145 +431,43 @@ def qualite_image(snr):
     else:
         return "Insuffisante"
 
-# =========================================================
-# MAINTENANCE
-# =========================================================
-
-def generer_parametres_scanner(numero_serie):
+def generer_maintenance(numero_serie):
 
     if numero_serie == "NS-PCCT-2026-001":
 
-        return (
-            65,
-            45,
-            15,
-            18,
-            8500,
-            "Stable",
-            "Normal"
-        )
+        return {
+
+            "snr":65,
+            "temp":45,
+            "vibration":15,
+            "bruit":18,
+            "etat":"Stable",
+            "couleur":"🟢"
+        }
 
     elif numero_serie == "NS-PCCT-2026-002":
 
-        return (
-            48,
-            68,
-            42,
-            45,
-            22000,
-            "Légère dégradation",
-            "À surveiller"
-        )
+        return {
+
+            "snr":48,
+            "temp":68,
+            "vibration":42,
+            "bruit":45,
+            "etat":"À surveiller",
+            "couleur":"🟠"
+        }
 
     else:
 
-        return (
-            38,
-            86,
-            75,
-            70,
-            36000,
-            "Dégradation importante",
-            "Défaillant"
-        )
+        return {
 
-def analyser_maintenance(numero_serie):
-
-    scanner = SCANNERS[numero_serie]
-
-    (
-        snr,
-        temp,
-        vibration,
-        bruit,
-        heures,
-        detecteurs,
-        refroidissement
-    ) = generer_parametres_scanner(numero_serie)
-
-    score = 0
-
-    score += max(0,50-snr)*1.3
-    score += max(0,temp-60)*1.2
-    score += vibration*0.5
-    score += bruit*0.4
-    score += heures*0.001
-
-    if detecteurs == "Légère dégradation":
-        score += 15
-
-    elif detecteurs == "Dégradation importante":
-        score += 35
-
-    if refroidissement == "À surveiller":
-        score += 15
-
-    elif refroidissement == "Défaillant":
-        score += 35
-
-    score = round(min(score,100),2)
-
-    if score < 35:
-
-        etat = "Stable"
-        couleur = "🟢"
-
-    elif score < 70:
-
-        etat = "À surveiller"
-        couleur = "🟠"
-
-    else:
-
-        etat = "Critique"
-        couleur = "🔴"
-
-    composant = "Aucun composant critique"
-    cause = "Fonctionnement normal"
-    action = "Surveillance régulière"
-
-    if temp > 75:
-
-        composant = "Tube RX"
-        cause = "Température élevée"
-        action = "Contrôle refroidissement"
-
-    elif vibration > 60:
-
-        composant = "Gantry"
-        cause = "Vibrations mécaniques élevées"
-        action = "Contrôle mécanique"
-
-    elif snr < 45:
-
-        composant = "Détecteurs"
-        cause = "Baisse SNR"
-        action = "Calibration détecteurs"
-
-    return {
-
-        "scanner":scanner["nom"],
-        "marque":scanner["marque"],
-        "modele":scanner["modele"],
-        "numero_serie":scanner["numero_serie"],
-
-        "snr_systeme":snr,
-        "temperature":temp,
-        "vibration":vibration,
-        "bruit":bruit,
-        "heures":heures,
-
-        "detecteurs":detecteurs,
-        "refroidissement":refroidissement,
-
-        "score":score,
-        "etat":etat,
-        "couleur":couleur,
-
-        "composant":composant,
-        "cause":cause,
-        "action":action
-    }
+            "snr":38,
+            "temp":86,
+            "vibration":75,
+            "bruit":70,
+            "etat":"Critique",
+            "couleur":"🔴"
+        }
 
 # =========================================================
 # SIDEBAR
@@ -603,7 +507,7 @@ if (
 
         "Accueil",
         "Workflow acquisition",
-        "SNR",
+        "Analyse SNR",
         "Dashboard"
     ]
 
@@ -613,9 +517,8 @@ else:
 
         "Accueil",
         "Maintenance préventive",
-        "Maintenance",
-        "Dashboard",
-        "Logs système"
+        "Maintenance scanner",
+        "Dashboard"
     ]
 
 menu = st.sidebar.radio(
@@ -629,31 +532,33 @@ menu = st.sidebar.radio(
 
 if menu == "Accueil":
 
-    st.title(
-        "PROMAMEC PCCT Intelligent System"
-    )
-
     st.markdown("""
 
-    <div class="card">
+    <div class="hero-card">
+
+    <h1>
+    PROMAMEC PCCT Intelligent System
+    </h1>
 
     <h3>
-    Objectif de l’application
+    Optimisation intelligente de dose
+    et maintenance prédictive
     </h3>
 
     <p>
 
-    Cette application permet :
+    Cette application propose une solution
+    intelligente permettant :
 
-    • optimisation intelligente de dose
+    • optimisation automatique de dose
 
-    • estimation qualité image via SNR
+    • estimation SNR
 
-    • surveillance biomédicale des scanners
+    • analyse qualité image
 
-    • maintenance prédictive
+    • surveillance scanner
 
-    • aide décisionnelle IA
+    • maintenance prédictive biomédicale
 
     </p>
 
@@ -661,26 +566,54 @@ if menu == "Accueil":
 
     """, unsafe_allow_html=True)
 
-    st.markdown("""
+    col1, col2 = st.columns(2)
 
-    <div class="soft-card">
+    with col1:
 
-    <h3>
-    Présentation de PROMAMEC
-    </h3>
+        st.markdown("""
 
-    <p>
+        <div class="card">
 
-    PROMAMEC est une entreprise spécialisée
-    dans les équipements biomédicaux,
-    l’installation et la maintenance des
-    dispositifs médicaux.
+        <h3>
+        Objectif du système
+        </h3>
 
-    </p>
+        <p>
 
-    </div>
+        Adapter automatiquement
+        les paramètres scanner
+        selon le profil patient
+        tout en gardant une bonne
+        qualité image.
 
-    """, unsafe_allow_html=True)
+        </p>
+
+        </div>
+
+        """, unsafe_allow_html=True)
+
+    with col2:
+
+        st.markdown("""
+
+        <div class="card">
+
+        <h3>
+        À propos de PROMAMEC
+        </h3>
+
+        <p>
+
+        PROMAMEC est spécialisée
+        dans les équipements biomédicaux,
+        l’installation et la maintenance
+        des dispositifs médicaux.
+
+        </p>
+
+        </div>
+
+        """, unsafe_allow_html=True)
 
 # =========================================================
 # WORKFLOW ACQUISITION
@@ -748,11 +681,9 @@ elif menu == "Workflow acquisition":
 
         sc = SCANNERS[numero_serie]
 
-        st.success(
-            "Scanner reconnu"
-        )
+        st.success("Scanner reconnu")
 
-        c1, c2, c3 = st.columns(3)
+        c1,c2,c3 = st.columns(3)
 
         c1.metric(
             "Marque",
@@ -766,38 +697,29 @@ elif menu == "Workflow acquisition":
 
         c3.metric(
             "N° série",
-            sc["numero_serie"]
+            numero_serie
         )
 
     elif numero_serie != "":
 
-        st.error(
-            "Scanner non reconnu"
-        )
+        st.error("Scanner non reconnu")
 
-    if st.button(
-        "Lancer acquisition"
-    ):
+    if st.button("Lancer acquisition"):
 
         if (
             nom == ""
             or prenom == ""
             or cin == ""
-            or age <= 0
-            or poids <= 0
-            or taille <= 0
             or numero_serie not in SCANNERS
         ):
 
             st.error(
-                "Veuillez compléter toutes les informations."
+                "Veuillez compléter les informations"
             )
 
         else:
 
             progress = st.progress(0)
-
-            status = st.empty()
 
             etapes = [
 
@@ -806,12 +728,14 @@ elif menu == "Workflow acquisition":
                 "Calcul IMC...",
                 "Optimisation dose...",
                 "Analyse SNR...",
-                "Génération résultats..."
+                "Résultats générés..."
             ]
 
-            for i, txt in enumerate(etapes):
+            status = st.empty()
 
-                status.info(txt)
+            for i, e in enumerate(etapes):
+
+                status.info(e)
 
                 progress.progress(
                     int((i+1)/len(etapes)*100)
@@ -822,7 +746,7 @@ elif menu == "Workflow acquisition":
                 taille
             )
 
-            dose = dose_adaptee(
+            dose = calcul_dose(
                 age,
                 imc
             )
@@ -833,11 +757,9 @@ elif menu == "Workflow acquisition":
                 dose
             )
 
-            qualite = qualite_image(
-                snr
-            )
+            qualite = qualite_image(snr)
 
-            r1, r2, r3, r4 = st.columns(4)
+            r1,r2,r3,r4 = st.columns(4)
 
             r1.metric(
                 "IMC",
@@ -855,15 +777,15 @@ elif menu == "Workflow acquisition":
             )
 
             r4.metric(
-                "Qualité",
+                "Qualité image",
                 qualite
             )
 
 # =========================================================
-# SNR
+# ANALYSE SNR
 # =========================================================
 
-elif menu == "SNR":
+elif menu == "Analyse SNR":
 
     st.title("Analyse SNR")
 
@@ -914,71 +836,43 @@ elif menu == "Maintenance préventive":
         "Maintenance préventive"
     )
 
-    rows = []
+    data = []
 
     for serial in SCANNERS:
 
-        m = analyser_maintenance(serial)
+        m = generer_maintenance(serial)
 
-        rows.append({
+        data.append({
 
-            "Scanner":m["scanner"],
-            "Marque":m["marque"],
-            "N° série":m["numero_serie"],
+            "Scanner":serial,
             "État":m["etat"],
-            "Score":m["score"],
-            "Composant":m["composant"]
+            "SNR":m["snr"],
+            "Température":m["temp"]
         })
 
     st.dataframe(
-        pd.DataFrame(rows),
+        pd.DataFrame(data),
         use_container_width=True
     )
 
 # =========================================================
-# MAINTENANCE
+# MAINTENANCE SCANNER
 # =========================================================
 
-elif menu == "Maintenance":
+elif menu == "Maintenance scanner":
 
     st.title(
-        "Maintenance intelligente"
+        "Maintenance scanner"
     )
 
     numero_serie = st.text_input(
-        "Entrer le numéro de série du scanner"
+        "Entrer numéro série scanner"
     )
 
     if numero_serie == "":
 
         st.info(
             "Veuillez entrer un numéro de série."
-        )
-
-        a1,a2,a3,a4 = st.columns(4)
-
-        a1.text_input(
-            "SNR système",
-            value="",
-            disabled=True
-        )
-
-        a2.text_input(
-            "Température",
-            value="",
-            disabled=True
-        )
-
-        a3.text_input(
-            "Vibration",
-            value="",
-            disabled=True
-        )
-
-        a4.text_input(
-            "Bruit",
-            value="",
-            disabled=True
         )
 
     elif numero_serie not in SCANNERS:
@@ -989,29 +883,31 @@ elif menu == "Maintenance":
 
     else:
 
-        m = analyser_maintenance(
+        m = generer_maintenance(
             numero_serie
         )
 
+        sc = SCANNERS[numero_serie]
+
         st.success(
-            "Scanner reconnu."
+            "Scanner reconnu"
         )
 
         c1,c2,c3 = st.columns(3)
 
         c1.metric(
             "Marque",
-            m["marque"]
+            sc["marque"]
         )
 
         c2.metric(
             "Modèle",
-            m["modele"]
+            sc["modele"]
         )
 
         c3.metric(
-            "N° série",
-            m["numero_serie"]
+            "État",
+            f"{m['couleur']} {m['etat']}"
         )
 
         st.markdown(
@@ -1020,82 +916,24 @@ elif menu == "Maintenance":
 
         a1,a2,a3,a4 = st.columns(4)
 
-        a1.text_input(
+        a1.metric(
             "SNR système",
-            value=str(m["snr_systeme"]),
-            disabled=True
+            m["snr"]
         )
 
-        a2.text_input(
+        a2.metric(
             "Température",
-            value=f"{m['temperature']} °C",
-            disabled=True
+            f"{m['temp']} °C"
         )
 
-        a3.text_input(
+        a3.metric(
             "Vibration",
-            value=f"{m['vibration']} %",
-            disabled=True
+            f"{m['vibration']} %"
         )
 
-        a4.text_input(
-            "Bruit",
-            value=f"{m['bruit']} %",
-            disabled=True
-        )
-
-        st.markdown(
-            "### Diagnostic IA"
-        )
-
-        d1,d2,d3 = st.columns(3)
-
-        d1.metric(
-            "Score stress",
-            f"{m['score']} %"
-        )
-
-        d2.metric(
-            "État",
-            f"{m['couleur']} {m['etat']}"
-        )
-
-        d3.metric(
-            "Composant suspect",
-            m["composant"]
-        )
-
-        st.write(
-            f"Cause probable : {m['cause']}"
-        )
-
-        st.write(
-            f"Action recommandée : {m['action']}"
-        )
-
-        dfm = pd.DataFrame({
-
-            "Paramètre":[
-
-                "SNR",
-                "Température",
-                "Vibration",
-                "Bruit",
-                "Score"
-            ],
-
-            "Valeur":[
-
-                m["snr_systeme"],
-                m["temperature"],
-                m["vibration"],
-                m["bruit"],
-                m["score"]
-            ]
-        })
-
-        st.bar_chart(
-            dfm.set_index("Paramètre")
+        a4.metric(
+            "Bruit image",
+            f"{m['bruit']} %"
         )
 
 # =========================================================
@@ -1126,12 +964,6 @@ elif menu == "Dashboard":
             65,
             48,
             38
-        ],
-
-        "État":[
-            "Stable",
-            "À surveiller",
-            "Critique"
         ]
     }
 
@@ -1143,38 +975,5 @@ elif menu == "Dashboard":
     )
 
     st.bar_chart(
-        df.set_index("Scanner")["SNR"]
+        df.set_index("Scanner")
     )
-
-# =========================================================
-# LOGS SYSTEME
-# =========================================================
-
-elif menu == "Logs système":
-
-    st.title(
-        "Logs système"
-    )
-
-    logs = [
-
-        "[12:05] Scanner connecté",
-
-        "[12:07] Analyse SNR effectuée",
-
-        "[12:08] Température élevée détectée",
-
-        "[12:09] Maintenance préventive recommandée"
-    ]
-
-    for log in logs:
-
-        st.markdown(f"""
-
-        <div class="soft-card">
-
-        {log}
-
-        </div>
-
-        """, unsafe_allow_html=True)
