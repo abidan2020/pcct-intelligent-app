@@ -2,116 +2,108 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import sqlite3
-import base64
 import os
 from io import BytesIO
 from datetime import datetime
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
-st.set_page_config(page_title="PCCT Intelligent System", layout="wide")
+st.set_page_config(page_title="PROMAMEC PCCT Intelligent System", layout="wide")
 
-DB_NAME = "patients_pcct.db"
-
-# =========================
-# LOGIN FIXE
-# =========================
-if "connecte" not in st.session_state:
-    st.session_state.connecte = False
-
-if "role" not in st.session_state:
-    st.session_state.role = ""
-
-if "nom_utilisateur" not in st.session_state:
-    st.session_state.nom_utilisateur = ""
-
-def page_login():
-    st.title("Connexion au système PCCT")
-
-    nom = st.text_input("Nom utilisateur")
-    identifiant = st.text_input("ID utilisateur", type="password")
-
-    if st.button("Se connecter"):
-        if nom.strip().lower() == "yassine abidan" and identifiant == "12345":
-            st.session_state.connecte = True
-            st.session_state.role = "Technicien de radiologie"
-            st.session_state.nom_utilisateur = "Yassine Abidan"
-            st.rerun()
-
-        elif nom.strip().lower() == "khadija abidan" and identifiant == "67890":
-            st.session_state.connecte = True
-            st.session_state.role = "Ingénieure biomédicale"
-            st.session_state.nom_utilisateur = "Khadija ABIDAN"
-            st.rerun()
-
-        else:
-            st.error("Nom ou ID incorrect.")
-
-if not st.session_state.connecte:
-    page_login()
-    st.stop()
+DB_NAME = "pcct_promamec.db"
 
 # =========================
-# BACKGROUND
-# =========================
-def get_base64_image(path):
-    if not os.path.exists(path):
-        return None
-    with open(path, "rb") as f:
-        return base64.b64encode(f.read()).decode()
-
-def set_bg(path):
-    img = get_base64_image(path)
-    if img:
-        st.markdown(f"""
-        <style>
-        .stApp {{
-            background:
-            linear-gradient(rgba(0,0,0,0.72), rgba(0,0,0,0.88)),
-            url("data:image/png;base64,{img}");
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
-        }}
-        </style>
-        """, unsafe_allow_html=True)
-
-# =========================
-# STYLE
+# STYLE BLANC / VERT
 # =========================
 st.markdown("""
 <style>
-[data-testid="stSidebar"] {background:#03111f;}
-[data-testid="stSidebar"] * {color:white;}
-
+.stApp {
+    background: linear-gradient(135deg, #ffffff, #e9f8f1);
+    color: #064e3b;
+}
+[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #064e3b, #10b981);
+}
+[data-testid="stSidebar"] * {
+    color: white;
+}
+h1, h2, h3 {
+    color: #064e3b;
+    font-weight: 700;
+}
 .card {
-    background:rgba(5,20,35,0.85);
-    padding:22px;
-    border-radius:18px;
-    margin-bottom:18px;
-    border:1px solid rgba(14,165,233,0.35);
-    box-shadow:0 0 18px rgba(0,0,0,0.45);
+    background: white;
+    padding: 22px;
+    border-radius: 20px;
+    border: 1px solid #bbf7d0;
+    box-shadow: 0 4px 18px rgba(6, 78, 59, 0.15);
+    margin-bottom: 18px;
 }
-
-h1, h2, h3, p, label, div {color:white;}
-
-.stButton > button {
-    background:#0ea5e9;
-    color:white;
-    border-radius:12px;
-    border:none;
-    font-weight:bold;
+.stButton>button {
+    background: #10b981;
+    color: white;
+    border-radius: 12px;
+    border: none;
+    font-weight: bold;
 }
-
+.stButton>button:hover {
+    background: #059669;
+    color: white;
+}
 [data-testid="stMetric"] {
-    background:rgba(5,20,35,0.88);
-    padding:15px;
-    border-radius:15px;
-    border:1px solid rgba(14,165,233,0.3);
+    background: white;
+    padding: 12px;
+    border-radius: 15px;
+    border-left: 5px solid #10b981;
 }
 </style>
 """, unsafe_allow_html=True)
+
+# =========================
+# LOGIN
+# =========================
+if "connecte" not in st.session_state:
+    st.session_state.connecte = False
+if "role" not in st.session_state:
+    st.session_state.role = ""
+if "nom_utilisateur" not in st.session_state:
+    st.session_state.nom_utilisateur = ""
+
+def login():
+    col1, col2, col3 = st.columns([1, 2, 1])
+
+    with col2:
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+
+        if os.path.exists("images/promamec.png"):
+            st.image("images/promamec.png", width=230)
+
+        st.title("PCCT Intelligent System")
+        st.subheader("Connexion sécurisée")
+
+        nom = st.text_input("Nom utilisateur")
+        identifiant = st.text_input("ID utilisateur", type="password")
+
+        if st.button("Se connecter"):
+            if nom.strip().lower() == "yassine abidan" and identifiant == "12345":
+                st.session_state.connecte = True
+                st.session_state.role = "Technicien de radiologie"
+                st.session_state.nom_utilisateur = "Yassine Abidan"
+                st.rerun()
+
+            elif nom.strip().lower() == "khadija abidan" and identifiant == "67890":
+                st.session_state.connecte = True
+                st.session_state.role = "Ingénieure biomédicale"
+                st.session_state.nom_utilisateur = "Khadija ABIDAN"
+                st.rerun()
+            else:
+                st.error("Nom ou ID incorrect.")
+
+        st.markdown('</div>', unsafe_allow_html=True)
+
+if not st.session_state.connecte:
+    login()
+    st.stop()
 
 # =========================
 # DATABASE
@@ -128,93 +120,114 @@ def init_db():
         prenom TEXT,
         cin TEXT UNIQUE,
         sexe TEXT,
-        type_examen TEXT,
         age INTEGER,
         poids REAL,
         taille REAL,
+        type_examen TEXT,
+        protocole TEXT,
         imc REAL,
         classe_imc TEXT,
         dose REAL,
         snr REAL,
+        qualite_image TEXT,
         kvp INTEGER,
         mas INTEGER,
-        ctdivol REAL,
+        ctdi REAL,
         dlp REAL,
+        scanner TEXT,
+        marque TEXT,
+        numero_serie TEXT,
         recommandation TEXT
+    )
+    """)
+
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS maintenance (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        date TEXT,
+        scanner TEXT,
+        marque TEXT,
+        numero_serie TEXT,
+        snr_systeme REAL,
+        temperature REAL,
+        vibration REAL,
+        bruit REAL,
+        heures INTEGER,
+        detecteurs TEXT,
+        refroidissement TEXT,
+        score REAL,
+        etat TEXT,
+        composant TEXT,
+        cause TEXT,
+        action TEXT
     )
     """)
 
     conn.commit()
     conn.close()
 
-def ajouter_patient(patient):
-    conn = sqlite3.connect(DB_NAME)
-    c = conn.cursor()
-
-    try:
-        c.execute("""
-        INSERT INTO patients (
-            date, nom, prenom, cin, sexe, type_examen, age,
-            poids, taille, imc, classe_imc, dose, snr,
-            kvp, mas, ctdivol, dlp, recommandation
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            patient["Date"], patient["Nom"], patient["Prénom"], patient["CIN"],
-            patient["Sexe"], patient["Type examen"], patient["Age"],
-            patient["Poids"], patient["Taille"], patient["IMC"],
-            patient["Classe IMC"], patient["Dose"], patient["SNR"],
-            patient["kVp"], patient["mAs"], patient["CTDIvol"],
-            patient["DLP"], patient["Recommandation"]
-        ))
-
-        conn.commit()
-        success = True
-
-    except sqlite3.IntegrityError:
-        success = False
-
-    conn.close()
-    return success
-
-def charger_patients():
-    conn = sqlite3.connect(DB_NAME)
-    df = pd.read_sql_query("SELECT * FROM patients", conn)
-    conn.close()
-    return df
-
-def modifier_patient(patient_id, patient):
-    conn = sqlite3.connect(DB_NAME)
-    c = conn.cursor()
-
-    c.execute("""
-    UPDATE patients SET
-        date=?, nom=?, prenom=?, cin=?, sexe=?, type_examen=?,
-        age=?, poids=?, taille=?, imc=?, classe_imc=?,
-        dose=?, snr=?, kvp=?, mas=?, ctdivol=?, dlp=?, recommandation=?
-    WHERE id=?
-    """, (
-        patient["Date"], patient["Nom"], patient["Prénom"], patient["CIN"],
-        patient["Sexe"], patient["Type examen"], patient["Age"],
-        patient["Poids"], patient["Taille"], patient["IMC"],
-        patient["Classe IMC"], patient["Dose"], patient["SNR"],
-        patient["kVp"], patient["mAs"], patient["CTDIvol"],
-        patient["DLP"], patient["Recommandation"], patient_id
-    ))
-
-    conn.commit()
-    conn.close()
-
-def supprimer_patient(patient_id):
-    conn = sqlite3.connect(DB_NAME)
-    c = conn.cursor()
-    c.execute("DELETE FROM patients WHERE id=?", (patient_id,))
-    conn.commit()
-    conn.close()
+init_db()
 
 # =========================
-# CALCULS PATIENT
+# DATA
 # =========================
+SCANNERS = {
+    "Scanner PCCT-01": {
+        "marque": "Neusoft",
+        "modele": "NeuViz Glory PCCT",
+        "numero_serie": "NS-PCCT-2026-001",
+        "localisation": "Service Radiologie"
+    },
+    "Scanner PCCT-02": {
+        "marque": "Neusoft",
+        "modele": "NeuViz Prime",
+        "numero_serie": "NS-PCCT-2026-002",
+        "localisation": "Urgences"
+    },
+    "Scanner PCCT-03": {
+        "marque": "Neusoft",
+        "modele": "NeuViz Epoch",
+        "numero_serie": "NS-PCCT-2026-003",
+        "localisation": "Cardiologie"
+    }
+}
+
+EXAMENS = [
+    "Scanner cérébral",
+    "Scanner thoracique",
+    "Scanner abdominal",
+    "Scanner cardiaque",
+    "Scanner pulmonaire",
+    "Scanner osseux",
+    "Scanner pelvien",
+    "Scanner corps entier"
+]
+
+PROTOCOLES = [
+    "Standard",
+    "Low Dose",
+    "Pédiatrique",
+    "Cardiaque",
+    "Trauma",
+    "Haute résolution"
+]
+
+# =========================
+# FONCTIONS PATIENT
+# =========================
+def protocole_examen(type_examen):
+    data = {
+        "Scanner cérébral": {"ctdi": 50, "kvp": 120, "mas": 250, "dlp": 900},
+        "Scanner thoracique": {"ctdi": 10, "kvp": 100, "mas": 120, "dlp": 350},
+        "Scanner abdominal": {"ctdi": 15, "kvp": 120, "mas": 180, "dlp": 600},
+        "Scanner cardiaque": {"ctdi": 20, "kvp": 100, "mas": 220, "dlp": 450},
+        "Scanner pulmonaire": {"ctdi": 8, "kvp": 100, "mas": 90, "dlp": 250},
+        "Scanner osseux": {"ctdi": 12, "kvp": 120, "mas": 160, "dlp": 400},
+        "Scanner pelvien": {"ctdi": 14, "kvp": 120, "mas": 170, "dlp": 500},
+        "Scanner corps entier": {"ctdi": 25, "kvp": 120, "mas": 300, "dlp": 1100}
+    }
+    return data[type_examen]
+
 def calcul_imc(poids, taille):
     if taille <= 0:
         return 0
@@ -232,29 +245,24 @@ def classe_imc(imc):
     else:
         return "Obésité"
 
-def protocole_examen(type_examen):
-    protocoles = {
-        "Scanner cérébral": {"ctdi": 50, "kvp": 120, "mas": 250, "dlp": 900},
-        "Scanner thoracique": {"ctdi": 10, "kvp": 100, "mas": 120, "dlp": 350},
-        "Scanner abdominal": {"ctdi": 15, "kvp": 120, "mas": 180, "dlp": 600},
-        "Scanner cardiaque": {"ctdi": 20, "kvp": 100, "mas": 220, "dlp": 450},
-        "Scanner pulmonaire": {"ctdi": 8, "kvp": 100, "mas": 90, "dlp": 250},
-        "Scanner osseux": {"ctdi": 12, "kvp": 120, "mas": 160, "dlp": 400},
-        "Scanner pelvien": {"ctdi": 14, "kvp": 120, "mas": 170, "dlp": 500},
-        "Scanner corps entier": {"ctdi": 25, "kvp": 120, "mas": 300, "dlp": 1100}
-    }
-    return protocoles[type_examen]
-
-def dose_adaptee(age, imc, type_examen):
-    p = protocole_examen(type_examen)
-    ctdi_ref = p["ctdi"]
+def dose_adaptee(age, imc, type_examen, protocole):
+    ref = protocole_examen(type_examen)["ctdi"]
 
     facteur_imc = 1 + 0.015 * (imc - 25)
     facteur_age = 1 + 0.002 * (age - 40)
 
-    dose = ctdi_ref * facteur_imc * facteur_age
-    dose = max(dose, ctdi_ref * 0.55)
-    dose = min(dose, ctdi_ref * 1.35)
+    facteur_protocole = {
+        "Standard": 1.00,
+        "Low Dose": 0.75,
+        "Pédiatrique": 0.60,
+        "Cardiaque": 1.10,
+        "Trauma": 1.20,
+        "Haute résolution": 1.15
+    }[protocole]
+
+    dose = ref * facteur_imc * facteur_age * facteur_protocole
+    dose = max(dose, ref * 0.50)
+    dose = min(dose, ref * 1.40)
 
     return round(dose, 2)
 
@@ -262,9 +270,18 @@ def calcul_snr(age, imc, dose):
     snr = 60 - 0.30 * imc - 0.05 * age + 0.70 * dose
     return round(max(snr, 10), 2)
 
+def qualite_image(snr):
+    if snr >= 70:
+        return "Excellente"
+    elif snr >= 55:
+        return "Bonne"
+    elif snr >= 50:
+        return "Acceptable"
+    else:
+        return "Insuffisante"
+
 def adaptation_parametres(age, imc, type_examen, dose, snr):
     p = protocole_examen(type_examen)
-
     kvp = p["kvp"]
     mas = p["mas"]
 
@@ -283,11 +300,9 @@ def adaptation_parametres(age, imc, type_examen, dose, snr):
 
     return round(kvp), round(mas), round(ctdi, 2), round(dlp, 2)
 
-def recommandation_ia(snr, dose, imc):
+def recommandation_patient(snr, dose, imc):
     if snr < 50:
-        return "SNR faible : augmenter légèrement le mAs ou ajuster la dose."
-    elif dose > 30 and imc < 25:
-        return "Dose élevée : réduction progressive possible tout en surveillant le SNR."
+        return "Qualité image insuffisante : augmenter légèrement le mAs ou ajuster la dose."
     elif snr >= 50 and dose <= 25:
         return "Paramètres acceptables : dose optimisée avec qualité image correcte."
     elif imc > 30:
@@ -295,347 +310,82 @@ def recommandation_ia(snr, dose, imc):
     else:
         return "Acquisition acceptable selon les paramètres estimés."
 
-def creer_patient(nom, prenom, cin, sexe, type_examen, age, poids, taille):
+def creer_patient(nom, prenom, cin, sexe, age, poids, taille, type_examen, protocole, scanner):
     imc = calcul_imc(poids, taille)
-    dose = dose_adaptee(age, imc, type_examen)
+    dose = dose_adaptee(age, imc, type_examen, protocole)
     snr = calcul_snr(age, imc, dose)
     kvp, mas, ctdi, dlp = adaptation_parametres(age, imc, type_examen, dose, snr)
-    reco = recommandation_ia(snr, dose, imc)
+    sc = SCANNERS[scanner]
 
     return {
-        "Date": datetime.now().strftime("%Y-%m-%d %H:%M"),
-        "Nom": nom,
-        "Prénom": prenom,
-        "CIN": cin,
-        "Sexe": sexe,
-        "Type examen": type_examen,
-        "Age": age,
-        "Poids": poids,
-        "Taille": taille,
-        "IMC": round(imc, 2),
-        "Classe IMC": classe_imc(imc),
-        "Dose": dose,
-        "SNR": snr,
-        "kVp": kvp,
-        "mAs": mas,
-        "CTDIvol": ctdi,
-        "DLP": dlp,
-        "Recommandation": reco
+        "date": datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "nom": nom,
+        "prenom": prenom,
+        "cin": cin,
+        "sexe": sexe,
+        "age": age,
+        "poids": poids,
+        "taille": taille,
+        "type_examen": type_examen,
+        "protocole": protocole,
+        "imc": round(imc, 2),
+        "classe_imc": classe_imc(imc),
+        "dose": dose,
+        "snr": snr,
+        "qualite_image": qualite_image(snr),
+        "kvp": kvp,
+        "mas": mas,
+        "ctdi": ctdi,
+        "dlp": dlp,
+        "scanner": scanner,
+        "marque": sc["marque"],
+        "numero_serie": sc["numero_serie"],
+        "recommandation": recommandation_patient(snr, dose, imc)
     }
 
-# =========================
-# EXPORTS
-# =========================
-def generer_excel(df):
-    output = BytesIO()
-
-    with pd.ExcelWriter(output, engine="openpyxl") as writer:
-        df.to_excel(writer, index=False, sheet_name="Patients")
-        ws = writer.sheets["Patients"]
-
-        for col in ws.columns:
-            max_len = max(len(str(cell.value)) if cell.value else 0 for cell in col)
-            ws.column_dimensions[col[0].column_letter].width = max_len + 4
-
-    output.seek(0)
-    return output
-
-def generer_pdf(patient):
-    buffer = BytesIO()
-    pdf = canvas.Canvas(buffer, pagesize=A4)
-    largeur, hauteur = A4
-    y = hauteur - 60
-
-    pdf.setFont("Helvetica-Bold", 20)
-    pdf.drawString(190, y, "Rapport Patient")
-
-    y -= 50
-    pdf.setFont("Helvetica", 11)
-    pdf.drawString(50, y, f"Date : {patient.get('date', patient.get('Date', ''))}")
-
-    y -= 45
-
-    def titre(txt):
-        nonlocal y
-        pdf.setFont("Helvetica-Bold", 14)
-        pdf.drawString(50, y, txt)
-        y -= 30
-
-    def ligne(label, valeur):
-        nonlocal y
-        pdf.setFont("Helvetica-Bold", 11)
-        pdf.drawString(60, y, f"{label} :")
-        pdf.setFont("Helvetica", 11)
-        pdf.drawString(220, y, str(valeur))
-        y -= 22
-
-    titre("Informations Patient")
-    ligne("Nom", patient.get("nom", patient.get("Nom", "")))
-    ligne("Prénom", patient.get("prenom", patient.get("Prénom", "")))
-    ligne("CIN", patient.get("cin", patient.get("CIN", "")))
-    ligne("Sexe", patient.get("sexe", patient.get("Sexe", "")))
-    ligne("Âge", patient.get("age", patient.get("Age", "")))
-    ligne("Poids", f"{patient.get('poids', patient.get('Poids', ''))} kg")
-    ligne("Taille", f"{patient.get('taille', patient.get('Taille', ''))} cm")
-    ligne("IMC", patient.get("imc", patient.get("IMC", "")))
-    ligne("Classe IMC", patient.get("classe_imc", patient.get("Classe IMC", "")))
-
-    y -= 10
-    titre("Examen")
-    ligne("Type d'examen", patient.get("type_examen", patient.get("Type examen", "")))
-
-    y -= 10
-    titre("Paramètres recommandés")
-    ligne("Dose recommandée", f"{patient.get('dose', patient.get('Dose', ''))} mGy")
-    ligne("SNR estimé", patient.get("snr", patient.get("SNR", "")))
-    ligne("kVp", patient.get("kvp", patient.get("kVp", "")))
-    ligne("mAs", patient.get("mas", patient.get("mAs", "")))
-    ligne("CTDIvol", f"{patient.get('ctdivol', patient.get('CTDIvol', ''))} mGy")
-    ligne("DLP", f"{patient.get('dlp', patient.get('DLP', ''))} mGy.cm")
-
-    y -= 10
-    titre("Recommandation IA")
-
-    reco = str(patient.get("recommandation", patient.get("Recommandation", "")))
-    pdf.setFont("Helvetica", 11)
-
-    for i in range(0, len(reco), 80):
-        pdf.drawString(60, y, reco[i:i+80])
-        y -= 18
-
-    y -= 20
-    titre("Conclusion")
-
+def save_patient(p):
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
     try:
-        snr_value = float(patient.get("snr", patient.get("SNR", 0)))
-    except:
-        snr_value = 0
+        c.execute("""
+        INSERT INTO patients (
+            date, nom, prenom, cin, sexe, age, poids, taille,
+            type_examen, protocole, imc, classe_imc, dose, snr,
+            qualite_image, kvp, mas, ctdi, dlp, scanner, marque,
+            numero_serie, recommandation
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, tuple(p.values()))
+        conn.commit()
+        ok = True
+    except sqlite3.IntegrityError:
+        ok = False
+    conn.close()
+    return ok
 
-    conclusion = "Qualité image acceptable." if snr_value >= 50 else "Qualité image insuffisante : ajustement recommandé."
-
-    pdf.setFont("Helvetica", 11)
-    pdf.drawString(60, y, conclusion)
-
-    pdf.setFont("Helvetica-Oblique", 9)
-    pdf.drawString(50, 30, "PCCT Intelligent System")
-
-    pdf.save()
-    buffer.seek(0)
-    return buffer
-
-# =========================
-# INIT
-# =========================
-init_db()
-
-examens = [
-    "Scanner cérébral",
-    "Scanner thoracique",
-    "Scanner abdominal",
-    "Scanner cardiaque",
-    "Scanner pulmonaire",
-    "Scanner osseux",
-    "Scanner pelvien",
-    "Scanner corps entier"
-]
+def load_patients():
+    conn = sqlite3.connect(DB_NAME)
+    df = pd.read_sql_query("SELECT * FROM patients", conn)
+    conn.close()
+    return df
 
 # =========================
-# SIDEBAR
+# MAINTENANCE
 # =========================
-st.sidebar.title("PCCT Intelligent System")
-st.sidebar.write(f"Utilisateur : {st.session_state.nom_utilisateur}")
-st.sidebar.write(f"Rôle : {st.session_state.role}")
-
-if st.sidebar.button("Déconnexion"):
-    st.session_state.connecte = False
-    st.session_state.role = ""
-    st.session_state.nom_utilisateur = ""
-    st.rerun()
-
-menu = st.sidebar.radio(
-    "Navigation",
-    [
-        "Accueil",
-        "Technicien",
-        "SNR",
-        "Maintenance",
-        "Dashboard",
-        "Validation",
-        "Rapport"
-    ]
-)
-
-# =========================
-# ACCUEIL
-# =========================
-if menu == "Accueil":
-    set_bg("accueil.png")
-
-    st.title("PCCT Intelligent System")
-    st.subheader("Optimisation intelligente de dose, qualité image et maintenance prédictive")
-
-    st.markdown("""
-    <div class="card">
-    <h3>Objectif</h3>
-    <p>
-    Cette application simule un système intelligent pour adapter la dose scanner
-    selon le patient, préserver un SNR acceptable et suivre l'état du scanner.
-    </p>
-    </div>
-    """, unsafe_allow_html=True)
-
-# =========================
-# TECHNICIEN
-# =========================
-elif menu == "Technicien":
-    set_bg("technicien.png")
-    st.title("Espace Technicien")
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-        st.markdown('<div class="card">', unsafe_allow_html=True)
-
-        nom = st.text_input("Nom")
-        prenom = st.text_input("Prénom")
-        cin = st.text_input("CIN")
-        sexe = st.selectbox("Sexe", ["Homme", "Femme"])
-        type_examen = st.selectbox("Type d'examen", examens)
-
-        age = st.number_input("Âge", min_value=0, max_value=120, value=0)
-        poids = st.number_input("Poids (kg)", min_value=0.0, max_value=200.0, value=0.0)
-        taille = st.number_input("Taille (cm)", min_value=0.0, max_value=220.0, value=0.0)
-
-        bouton = st.button("Calculer et enregistrer")
-
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    if age > 0 and poids > 0 and taille > 0:
-        patient = creer_patient(nom, prenom, cin, sexe, type_examen, age, poids, taille)
-
-        with col2:
-            st.metric("IMC", patient["IMC"])
-            st.metric("Classe IMC", patient["Classe IMC"])
-            st.metric("Dose recommandée", f"{patient['Dose']} mGy")
-            st.metric("SNR estimé", patient["SNR"])
-            st.metric("kVp recommandé", patient["kVp"])
-            st.metric("mAs recommandé", patient["mAs"])
-            st.metric("CTDIvol", f"{patient['CTDIvol']} mGy")
-            st.metric("DLP", f"{patient['DLP']} mGy.cm")
-
-            if patient["SNR"] >= 50:
-                st.success("Qualité image acceptable")
-            else:
-                st.error("SNR insuffisant")
-
-            st.info(patient["Recommandation"])
+def generer_parametres_scanner(scanner):
+    if scanner == "Scanner PCCT-01":
+        return 65, 45, 15, 18, 8500, "Stable", "Normal"
+    elif scanner == "Scanner PCCT-02":
+        return 48, 68, 42, 45, 22000, "Légère dégradation", "À surveiller"
     else:
-        patient = None
-        with col2:
-            st.metric("IMC", 0)
-            st.metric("Classe IMC", "Non calculé")
-            st.metric("Dose recommandée", "0 mGy")
-            st.metric("SNR estimé", 0)
-            st.metric("kVp recommandé", 0)
-            st.metric("mAs recommandé", 0)
-            st.metric("CTDIvol", "0 mGy")
-            st.metric("DLP", "0 mGy.cm")
-            st.warning("Veuillez entrer les informations du patient pour lancer le calcul.")
+        return 38, 86, 75, 70, 36000, "Dégradation importante", "Défaillant"
 
-    if bouton:
-        if cin.strip() == "":
-            st.error("Veuillez entrer le CIN.")
-        elif patient is None:
-            st.error("Veuillez entrer l'âge, le poids et la taille du patient.")
-        else:
-            ok = ajouter_patient(patient)
-            if ok:
-                st.success("Le patient a été bien enregistré.")
-            else:
-                st.warning("Ce patient est déjà enregistré avec ce CIN.")
-
-# =========================
-# SNR
-# =========================
-elif menu == "SNR":
-    set_bg("snr.png")
-    st.title("Analyse SNR")
-
-    imc_v = st.slider("IMC", 15, 45, 25)
-    age_v = st.slider("Âge", 10, 90, 40)
-
-    doses = np.linspace(3, 60, 40)
-    snrs = [calcul_snr(age_v, imc_v, d) for d in doses]
-
-    df = pd.DataFrame({"Dose": doses, "SNR": snrs})
-    st.line_chart(df.set_index("Dose"))
-
-# =========================
-# MAINTENANCE AMÉLIORÉE
-# =========================
-elif menu == "Maintenance":
-    set_bg("maintenance.png")
-    st.title("Maintenance prédictive du scanner PCCT")
-
-    st.markdown("### Paramètres techniques du scanner")
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-        scanner = st.selectbox(
-            "Scanner concerné",
-            ["Scanner PCCT-01", "Scanner PCCT-02", "Scanner PCCT-03"]
-        )
-
-        snr_sys = st.number_input(
-            "SNR système",
-            min_value=0.0,
-            max_value=100.0,
-            value=0.0
-        )
-
-        temperature = st.number_input(
-            "Température du tube RX (°C)",
-            min_value=0.0,
-            max_value=150.0,
-            value=0.0
-        )
-
-        vibration = st.slider(
-            "Vibration du gantry (%)",
-            0,
-            100,
-            0
-        )
-
-    with col2:
-        heures = st.number_input(
-            "Heures d’utilisation du scanner",
-            min_value=0,
-            max_value=100000,
-            value=0
-        )
-
-        bruit = st.slider(
-            "Niveau de bruit image (%)",
-            0,
-            100,
-            0
-        )
-
-        detecteurs = st.selectbox(
-            "État des détecteurs photon-counting",
-            ["Stable", "Légère dégradation", "Dégradation importante"]
-        )
-
-        refroidissement = st.selectbox(
-            "État du refroidissement",
-            ["Normal", "À surveiller", "Défaillant"]
-        )
+def analyser_maintenance(scanner):
+    snr, temp, vibration, bruit, heures, detecteurs, refroidissement = generer_parametres_scanner(scanner)
 
     score = 0
-    score += max(0, 50 - snr_sys) * 1.3
-    score += max(0, temperature - 60) * 1.2
+    score += max(0, 50 - snr) * 1.3
+    score += max(0, temp - 60) * 1.2
     score += vibration * 0.5
     score += bruit * 0.4
     score += heures * 0.001
@@ -662,239 +412,337 @@ elif menu == "Maintenance":
         etat = "Critique"
         couleur = "🔴"
 
-    composant = "Aucun composant critique détecté"
+    composant = "Aucun composant critique"
     cause = "Fonctionnement normal"
-    action = "Continuer la surveillance régulière"
+    action = "Surveillance régulière"
 
-    if temperature > 75 or refroidissement == "Défaillant":
-        composant = "Tube RX / système de refroidissement"
+    if temp > 75 or refroidissement == "Défaillant":
+        composant = "Tube RX / Refroidissement"
         cause = "Température élevée ou refroidissement insuffisant"
-        action = "Contrôler le système de refroidissement et vérifier le tube RX"
-
+        action = "Contrôler le refroidissement et vérifier le tube RX"
     elif vibration > 60:
         composant = "Gantry"
         cause = "Vibrations mécaniques élevées"
-        action = "Vérifier l’alignement mécanique et les roulements du gantry"
-
-    elif snr_sys < 45 or bruit > 60 or detecteurs == "Dégradation importante":
+        action = "Vérifier l’alignement mécanique et les roulements"
+    elif snr < 45 or bruit > 60 or detecteurs == "Dégradation importante":
         composant = "Détecteurs photon-counting"
-        cause = "Baisse du SNR ou augmentation du bruit image"
+        cause = "Baisse du SNR ou bruit image élevé"
         action = "Effectuer une calibration des détecteurs"
-
     elif heures > 30000:
         composant = "Tube RX"
         cause = "Nombre d’heures d’utilisation élevé"
-        action = "Planifier une maintenance préventive du tube RX"
+        action = "Planifier une maintenance préventive"
 
-    st.markdown("---")
-    st.markdown("## Résultats de l’analyse maintenance")
+    return {
+        "scanner": scanner,
+        "marque": SCANNERS[scanner]["marque"],
+        "numero_serie": SCANNERS[scanner]["numero_serie"],
+        "snr_systeme": snr,
+        "temperature": temp,
+        "vibration": vibration,
+        "bruit": bruit,
+        "heures": heures,
+        "detecteurs": detecteurs,
+        "refroidissement": refroidissement,
+        "score": score,
+        "etat": etat,
+        "couleur": couleur,
+        "composant": composant,
+        "cause": cause,
+        "action": action
+    }
+
+def save_maintenance(m):
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("""
+    INSERT INTO maintenance (
+        date, scanner, marque, numero_serie, snr_systeme, temperature,
+        vibration, bruit, heures, detecteurs, refroidissement, score,
+        etat, composant, cause, action
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        datetime.now().strftime("%Y-%m-%d %H:%M"),
+        m["scanner"], m["marque"], m["numero_serie"],
+        m["snr_systeme"], m["temperature"], m["vibration"],
+        m["bruit"], m["heures"], m["detecteurs"], m["refroidissement"],
+        m["score"], m["etat"], m["composant"], m["cause"], m["action"]
+    ))
+    conn.commit()
+    conn.close()
+
+def load_maintenance():
+    conn = sqlite3.connect(DB_NAME)
+    df = pd.read_sql_query("SELECT * FROM maintenance", conn)
+    conn.close()
+    return df
+
+# =========================
+# EXPORT
+# =========================
+def export_excel(df):
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        df.to_excel(writer, index=False)
+    output.seek(0)
+    return output
+
+def generer_pdf_patient(row):
+    buffer = BytesIO()
+    pdf = canvas.Canvas(buffer, pagesize=A4)
+    y = 800
+
+    pdf.setFont("Helvetica-Bold", 18)
+    pdf.drawString(150, y, "Rapport Patient - PCCT Intelligent System")
+    y -= 40
+
+    pdf.setFont("Helvetica", 11)
+    for key, value in row.items():
+        pdf.drawString(50, y, f"{key} : {value}")
+        y -= 18
+        if y < 60:
+            pdf.showPage()
+            y = 800
+
+    pdf.save()
+    buffer.seek(0)
+    return buffer
+
+# =========================
+# SIDEBAR
+# =========================
+st.sidebar.title("PROMAMEC")
+st.sidebar.write(f"Utilisateur : {st.session_state.nom_utilisateur}")
+st.sidebar.write(f"Rôle : {st.session_state.role}")
+
+if st.sidebar.button("Déconnexion"):
+    st.session_state.connecte = False
+    st.session_state.role = ""
+    st.session_state.nom_utilisateur = ""
+    st.rerun()
+
+if st.session_state.role == "Technicien de radiologie":
+    pages = ["Accueil", "Workflow acquisition", "SNR", "Dashboard", "Rapport"]
+else:
+    pages = ["Accueil", "Maintenance", "Dashboard", "Logs système", "Rapport"]
+
+menu = st.sidebar.radio("Navigation", pages)
+
+# =========================
+# ACCUEIL
+# =========================
+if menu == "Accueil":
+    st.title("PROMAMEC PCCT Intelligent System")
+    st.subheader("Optimisation de dose, qualité image et maintenance prédictive")
 
     c1, c2, c3 = st.columns(3)
-    c1.metric("Score de stress", f"{score} %")
-    c2.metric("État global", f"{couleur} {etat}")
-    c3.metric("Scanner", scanner)
+    for i, sc in enumerate(SCANNERS):
+        m = analyser_maintenance(sc)
+        with [c1, c2, c3][i]:
+            st.markdown('<div class="card">', unsafe_allow_html=True)
+            st.markdown(f"### {sc}")
+            st.write(f"**Marque :** {m['marque']}")
+            st.write(f"**N° série :** {m['numero_serie']}")
+            st.metric("État", f"{m['couleur']} {m['etat']}")
+            st.metric("Score stress", f"{m['score']} %")
+            st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown("### État des composants")
+# =========================
+# WORKFLOW ACQUISITION
+# =========================
+elif menu == "Workflow acquisition":
+    st.title("Workflow d’acquisition patient")
 
+    st.markdown("### 1. Données patient")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        nom = st.text_input("Nom")
+        prenom = st.text_input("Prénom")
+        cin = st.text_input("CIN")
+        sexe = st.selectbox("Sexe", ["Homme", "Femme"])
+        age = st.number_input("Âge", 0, 120, 0)
+
+    with col2:
+        poids = st.number_input("Poids (kg)", 0.0, 200.0, 0.0)
+        taille = st.number_input("Taille (cm)", 0.0, 220.0, 0.0)
+        type_examen = st.selectbox("Type d’examen", EXAMENS)
+        protocole = st.selectbox("Protocole", PROTOCOLES)
+        scanner = st.selectbox("Scanner", list(SCANNERS.keys()))
+
+    st.markdown("### 2. Scanner connecté")
+    sc = SCANNERS[scanner]
+
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Marque", sc["marque"])
+    c2.metric("Modèle", sc["modele"])
+    c3.metric("N° série", sc["numero_serie"])
+
+    if st.button("Lancer acquisition et analyse IA"):
+        if nom == "" or prenom == "" or cin == "" or age <= 0 or poids <= 0 or taille <= 0:
+            st.error("Veuillez compléter toutes les informations patient.")
+        else:
+            progress = st.progress(0)
+            status = st.empty()
+
+            for i, txt in enumerate([
+                "Connexion scanner...",
+                "Acquisition des données patient...",
+                "Calcul IMC...",
+                "Optimisation dose...",
+                "Analyse SNR...",
+                "Génération recommandation..."
+            ]):
+                status.info(txt)
+                progress.progress((i + 1) * 16)
+
+            p = creer_patient(nom, prenom, cin, sexe, age, poids, taille, type_examen, protocole, scanner)
+            ok = save_patient(p)
+
+            if ok:
+                st.success("Patient enregistré avec succès.")
+            else:
+                st.warning("Patient déjà enregistré avec ce CIN.")
+
+            st.markdown("### Résultats")
+            r1, r2, r3, r4 = st.columns(4)
+            r1.metric("IMC", p["imc"])
+            r2.metric("Dose", f"{p['dose']} mGy")
+            r3.metric("SNR", p["snr"])
+            r4.metric("Qualité image", p["qualite_image"])
+
+            st.write(f"**Recommandation IA :** {p['recommandation']}")
+
+# =========================
+# SNR
+# =========================
+elif menu == "SNR":
+    st.title("Analyse SNR")
+    imc = st.slider("IMC", 15, 45, 25)
+    age = st.slider("Âge", 10, 90, 40)
+
+    doses = np.linspace(3, 60, 40)
+    snrs = [calcul_snr(age, imc, d) for d in doses]
+
+    df = pd.DataFrame({"Dose": doses, "SNR": snrs})
+    st.line_chart(df.set_index("Dose"))
+
+# =========================
+# MAINTENANCE
+# =========================
+elif menu == "Maintenance":
+    st.title("Maintenance prédictive intelligente")
+
+    scanner = st.selectbox("Choisir le scanner", list(SCANNERS.keys()))
+    m = analyser_maintenance(scanner)
+
+    st.markdown("### Informations scanner")
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Marque", m["marque"])
+    c2.metric("N° série", m["numero_serie"])
+    c3.metric("État global", f"{m['couleur']} {m['etat']}")
+
+    st.markdown("### Paramètres techniques calculés automatiquement")
+    a1, a2, a3, a4 = st.columns(4)
+    a1.metric("SNR système", m["snr_systeme"])
+    a2.metric("Température tube RX", f"{m['temperature']} °C")
+    a3.metric("Vibration gantry", f"{m['vibration']} %")
+    a4.metric("Bruit image", f"{m['bruit']} %")
+
+    b1, b2, b3 = st.columns(3)
+    b1.metric("Heures utilisation", m["heures"])
+    b2.metric("Détecteurs", m["detecteurs"])
+    b3.metric("Refroidissement", m["refroidissement"])
+
+    st.markdown("### Diagnostic IA")
     d1, d2, d3 = st.columns(3)
+    d1.metric("Score stress", f"{m['score']} %")
+    d2.metric("Composant suspect", m["composant"])
+    d3.metric("État", m["etat"])
 
-    if detecteurs == "Stable":
-        d1.success("Détecteurs : Stable")
-    elif detecteurs == "Légère dégradation":
-        d1.warning("Détecteurs : À surveiller")
+    st.write(f"**Cause probable :** {m['cause']}")
+    st.write(f"**Action recommandée :** {m['action']}")
+
+    if m["etat"] == "Stable":
+        st.success("Scanner stable. Aucune intervention urgente.")
+    elif m["etat"] == "À surveiller":
+        st.warning("Surveillance préventive recommandée.")
     else:
-        d1.error("Détecteurs : Dégradation importante")
+        st.error("Risque élevé de panne. Intervention recommandée rapidement.")
 
-    if temperature < 60:
-        d2.success("Tube RX : Stable")
-    elif temperature < 80:
-        d2.warning("Tube RX : Température élevée")
-    else:
-        d2.error("Tube RX : Surchauffe critique")
-
-    if vibration < 40:
-        d3.success("Gantry : Stable")
-    elif vibration < 70:
-        d3.warning("Gantry : Vibrations anormales")
-    else:
-        d3.error("Gantry : Risque mécanique élevé")
-
-    st.markdown("## Diagnostic technique")
-
-    st.write(f"**Composant suspect :** {composant}")
-    st.write(f"**Cause probable :** {cause}")
-    st.write(f"**Action recommandée :** {action}")
-
-    if etat == "Stable":
-        st.success("Le scanner fonctionne normalement. Aucune intervention urgente n’est nécessaire.")
-    elif etat == "À surveiller":
-        st.warning("Certaines valeurs sont anormales. Une surveillance préventive est recommandée.")
-    else:
-        st.error("Risque élevé de panne détecté. Une intervention rapide est recommandée.")
-
-    st.markdown("## Tableau récapitulatif")
-
-    df_maintenance = pd.DataFrame({
-        "Paramètre": [
-            "Scanner",
-            "SNR système",
-            "Température tube RX",
-            "Vibration gantry",
-            "Bruit image",
-            "Heures d’utilisation",
-            "État détecteurs",
-            "Refroidissement",
-            "Score stress",
-            "État global",
-            "Composant suspect"
-        ],
-        "Valeur": [
-            scanner,
-            snr_sys,
-            f"{temperature} °C",
-            f"{vibration} %",
-            f"{bruit} %",
-            heures,
-            detecteurs,
-            refroidissement,
-            f"{score} %",
-            etat,
-            composant
-        ]
-    })
-
-    st.dataframe(df_maintenance, use_container_width=True)
-
-    st.markdown("## Visualisation des paramètres")
-
-    df_graph = pd.DataFrame({
+    dfm = pd.DataFrame({
         "Paramètre": ["SNR", "Température", "Vibration", "Bruit", "Score stress"],
-        "Valeur": [snr_sys, temperature, vibration, bruit, score]
+        "Valeur": [m["snr_systeme"], m["temperature"], m["vibration"], m["bruit"], m["score"]]
     })
+    st.bar_chart(dfm.set_index("Paramètre"))
 
-    st.bar_chart(df_graph.set_index("Paramètre"))
+    if st.button("Enregistrer le log maintenance"):
+        save_maintenance(m)
+        st.success("Log maintenance enregistré.")
 
 # =========================
 # DASHBOARD
 # =========================
 elif menu == "Dashboard":
-    set_bg("rapport.png")
     st.title("Dashboard global")
 
-    st.subheader("Importer un historique Excel")
-    fichier = st.file_uploader("Importer fichier .xlsx", type=["xlsx"])
-
-    if fichier is not None:
-        try:
-            df_import = pd.read_excel(fichier, engine="openpyxl")
-
-            for _, row in df_import.iterrows():
-                patient_import = {
-                    "Date": str(row.get("date", row.get("Date", datetime.now().strftime("%Y-%m-%d %H:%M")))),
-                    "Nom": str(row.get("nom", row.get("Nom", ""))),
-                    "Prénom": str(row.get("prenom", row.get("Prénom", ""))),
-                    "CIN": str(row.get("cin", row.get("CIN", ""))),
-                    "Sexe": str(row.get("sexe", row.get("Sexe", ""))),
-                    "Type examen": str(row.get("type_examen", row.get("Type examen", ""))),
-                    "Age": int(row.get("age", row.get("Age", 0))),
-                    "Poids": float(row.get("poids", row.get("Poids", 0))),
-                    "Taille": float(row.get("taille", row.get("Taille", 0))),
-                    "IMC": float(row.get("imc", row.get("IMC", 0))),
-                    "Classe IMC": str(row.get("classe_imc", row.get("Classe IMC", ""))),
-                    "Dose": float(row.get("dose", row.get("Dose", 0))),
-                    "SNR": float(row.get("snr", row.get("SNR", 0))),
-                    "kVp": int(row.get("kvp", row.get("kVp", 0))),
-                    "mAs": int(row.get("mas", row.get("mAs", 0))),
-                    "CTDIvol": float(row.get("ctdivol", row.get("CTDIvol", 0))),
-                    "DLP": float(row.get("dlp", row.get("DLP", 0))),
-                    "Recommandation": str(row.get("recommandation", row.get("Recommandation", "")))
-                }
-
-                if patient_import["CIN"] != "":
-                    ajouter_patient(patient_import)
-
-            st.success("Historique importé avec succès.")
-            st.rerun()
-
-        except Exception as e:
-            st.error("Impossible de lire ce fichier Excel.")
-            st.write(e)
-
-    df = charger_patients()
+    df = load_patients()
 
     if df.empty:
         st.warning("Aucun patient enregistré.")
     else:
-        col1, col2, col3, col4 = st.columns(4)
-        col1.metric("Nombre patients", len(df))
-        col2.metric("Dose moyenne", round(df["dose"].mean(), 2))
-        col3.metric("SNR moyen", round(df["snr"].mean(), 2))
-        col4.metric("Cas SNR < 50", int((df["snr"] < 50).sum()))
+        c1, c2, c3, c4 = st.columns(4)
+        c1.metric("Patients", len(df))
+        c2.metric("Dose moyenne", round(df["dose"].mean(), 2))
+        c3.metric("SNR moyen", round(df["snr"].mean(), 2))
+        c4.metric("SNR < 50", int((df["snr"] < 50).sum()))
 
         st.dataframe(df, use_container_width=True)
 
         st.subheader("Évolution Dose / SNR")
         st.line_chart(df[["dose", "snr"]])
 
-        st.subheader("Répartition des examens")
+        st.subheader("Répartition examens")
         st.bar_chart(df["type_examen"].value_counts())
 
-        st.subheader("Répartition des classes IMC")
-        st.bar_chart(df["classe_imc"].value_counts())
-
-        st.subheader("Dose moyenne par type d'examen")
-        st.bar_chart(df.groupby("type_examen")["dose"].mean())
-
-        excel_file = generer_excel(df)
+        st.subheader("Qualité image")
+        st.bar_chart(df["qualite_image"].value_counts())
 
         st.download_button(
-            "Télécharger historique Excel",
-            data=excel_file,
-            file_name="historique_patients.xlsx",
+            "Exporter Excel",
+            data=export_excel(df),
+            file_name="patients_pcct.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
 
 # =========================
-# VALIDATION
+# LOGS SYSTÈME
 # =========================
-elif menu == "Validation":
-    set_bg("rapport.png")
-    st.title("Validation des cas de test")
+elif menu == "Logs système":
+    st.title("Logs système et historique maintenance")
 
-    cas_tests = [
-        ("Patient mince", "Lina", "Sara", "RED001", "Femme", "Scanner thoracique", 23, 45.0, 170.0),
-        ("Enfant", "Adam", "Youssef", "RED002", "Homme", "Scanner pulmonaire", 9, 32.0, 138.0),
-        ("Patient obèse", "Mehdi", "Rachid", "RED003", "Homme", "Scanner corps entier", 59, 145.0, 171.0),
-        ("Patient âgé", "Nadia", "Salma", "RED004", "Femme", "Scanner cardiaque", 72, 69.0, 162.0)
-    ]
+    df = load_maintenance()
 
-    rows = []
+    if df.empty:
+        st.warning("Aucun log maintenance enregistré.")
+    else:
+        st.dataframe(df, use_container_width=True)
 
-    for nom_cas, nom, prenom, cin, sexe, exam, age, poids, taille in cas_tests:
-        p = creer_patient(nom, prenom, cin, sexe, exam, age, poids, taille)
-        p["Cas test"] = nom_cas
-        rows.append(p)
+        st.subheader("États scanners")
+        st.bar_chart(df["etat"].value_counts())
 
-    df_val = pd.DataFrame(rows)
-
-    st.dataframe(df_val, use_container_width=True)
-
-    st.subheader("Comparaison Dose / SNR")
-    st.bar_chart(df_val.set_index("Cas test")[["Dose", "SNR"]])
-
-    st.info(
-        "Cette validation montre que la dose diminue chez les patients minces ou pédiatriques, "
-        "et augmente chez les patients obèses pour maintenir un SNR acceptable."
-    )
+        st.subheader("Composants suspects")
+        st.bar_chart(df["composant"].value_counts())
 
 # =========================
 # RAPPORT
 # =========================
 elif menu == "Rapport":
-    set_bg("rapport.png")
-    st.title("Rapports Patients")
+    st.title("Rapports patients")
 
-    df = charger_patients()
+    df = load_patients()
 
     if df.empty:
         st.warning("Aucun patient enregistré.")
@@ -902,73 +750,21 @@ elif menu == "Rapport":
         st.dataframe(df, use_container_width=True)
 
         patient_id = st.selectbox(
-            "Choisir un patient",
+            "Choisir patient",
             df["id"],
             format_func=lambda x: f"{df[df['id']==x]['nom'].values[0]} {df[df['id']==x]['prenom'].values[0]}"
         )
 
-        patient = df[df["id"] == patient_id].iloc[0].to_dict()
+        row = df[df["id"] == patient_id].iloc[0].to_dict()
 
-        st.subheader("Modifier les informations")
+        st.markdown("### Aperçu")
+        st.write(row)
 
-        with st.form("modification_patient"):
-            nom = st.text_input("Nom", patient["nom"])
-            prenom = st.text_input("Prénom", patient["prenom"])
-            cin = st.text_input("CIN", patient["cin"])
-
-            sexe = st.selectbox(
-                "Sexe",
-                ["Homme", "Femme"],
-                index=0 if patient["sexe"] == "Homme" else 1
-            )
-
-            type_examen = st.selectbox(
-                "Type d'examen",
-                examens,
-                index=examens.index(patient["type_examen"]) if patient["type_examen"] in examens else 0
-            )
-
-            age = st.number_input("Âge", 0, 120, int(patient["age"]))
-            poids = st.number_input("Poids (kg)", 0.0, 200.0, float(patient["poids"]))
-            taille = st.number_input("Taille (cm)", 0.0, 220.0, float(patient["taille"]))
-
-            modifier = st.form_submit_button("Enregistrer modifications")
-
-        if modifier:
-            if age <= 0 or poids <= 0 or taille <= 0:
-                st.error("Veuillez entrer un âge, un poids et une taille valides.")
-            else:
-                p_mod = creer_patient(nom, prenom, cin, sexe, type_examen, age, poids, taille)
-                modifier_patient(patient_id, p_mod)
-                st.success("Patient modifié avec succès.")
-                st.rerun()
-
-        st.subheader("Aperçu du rapport")
-
-        st.write(f"**Nom :** {patient['nom']}")
-        st.write(f"**Prénom :** {patient['prenom']}")
-        st.write(f"**CIN :** {patient['cin']}")
-        st.write(f"**Sexe :** {patient['sexe']}")
-        st.write(f"**Type examen :** {patient['type_examen']}")
-        st.write(f"**IMC :** {patient['imc']} — {patient['classe_imc']}")
-        st.write(f"**Dose :** {patient['dose']} mGy")
-        st.write(f"**SNR :** {patient['snr']}")
-        st.write(f"**kVp :** {patient['kvp']}")
-        st.write(f"**mAs :** {patient['mas']}")
-        st.write(f"**CTDIvol :** {patient['ctdivol']} mGy")
-        st.write(f"**DLP :** {patient['dlp']} mGy.cm")
-        st.info(patient["recommandation"])
-
-        pdf_file = generer_pdf(patient)
+        pdf = generer_pdf_patient(row)
 
         st.download_button(
             "Télécharger rapport PDF",
-            data=pdf_file,
-            file_name=f"rapport_{patient['nom']}_{patient['prenom']}.pdf",
+            data=pdf,
+            file_name=f"rapport_{row['nom']}_{row['prenom']}.pdf",
             mime="application/pdf"
         )
-
-        if st.button("Supprimer ce patient"):
-            supprimer_patient(patient_id)
-            st.success("Patient supprimé.")
-            st.rerun()
