@@ -1,3 +1,4 @@
+
 # =========================================================
 # PROMAMEC PCCT INTELLIGENT SYSTEM
 # =========================================================
@@ -21,39 +22,33 @@ st.set_page_config(
 DB_NAME = "pcct_promamec.db"
 
 # =========================================================
-# STYLE PROFESSIONNEL PROMAMEC
+# STYLE PROMAMEC HOMOGÈNE
 # =========================================================
 
 st.markdown("""
 <style>
 
 :root {
-    --main-green: #007A5E;
-    --dark-green: #004D3A;
-    --soft-green: #EAF7F2;
-    --light-green: #F6FCF9;
-    --text-dark: #173B35;
-    --border: #D8EFE7;
+    --green-dark: #006B4F;
+    --green-main: #008B68;
+    --green-soft: #F2FAF7;
+    --green-border: #CFE8DE;
+    --text-dark: #1F2933;
+    --white: #FFFFFF;
 }
 
-/* Page générale */
 .stApp {
-    background: linear-gradient(
-        135deg,
-        #ffffff 0%,
-        #F6FCF9 55%,
-        #EAF7F2 100%
-    );
+    background: #F8FCFA;
     color: var(--text-dark);
 }
 
-/* Sidebar */
+/* SIDEBAR */
+
 [data-testid="stSidebar"] {
     background: linear-gradient(
         180deg,
-        #004D3A 0%,
-        #007A5E 60%,
-        #BFE7D8 100%
+        #006B4F 0%,
+        #008B68 100%
     );
 }
 
@@ -61,137 +56,90 @@ st.markdown("""
     color: white !important;
 }
 
-/* Titres */
-h1 {
-    color: var(--dark-green) !important;
-    font-size: 38px !important;
-    font-weight: 800 !important;
-}
+/* TITRES */
 
-h2,h3,h4 {
-    color: var(--main-green) !important;
+h1,h2,h3,h4 {
+    color: var(--green-dark) !important;
     font-weight: 700 !important;
 }
 
-/* Cartes */
-.card {
-    background: rgba(255,255,255,0.96);
-    padding: 28px;
-    border-radius: 24px;
-    border: 1px solid var(--border);
-    box-shadow:
-    0 10px 28px rgba(0,77,58,0.10);
-    margin-bottom: 22px;
+/* TEXTES */
+
+p,label,span,div {
+    color: var(--text-dark);
 }
 
+/* CARTES */
+
+.card,
+.soft-card,
 .hero-card {
-    background: linear-gradient(
-        135deg,
-        #ffffff,
-        #F0FBF6
-    );
 
-    padding: 35px;
+    background: white;
 
-    border-radius: 28px;
+    padding: 24px;
 
-    border: 1px solid var(--border);
+    border-radius: 18px;
+
+    border: 1px solid var(--green-border);
 
     box-shadow:
-    0 12px 32px rgba(0,77,58,0.12);
+    0 6px 18px rgba(0,107,79,0.10);
 
-    margin-bottom: 25px;
+    margin-bottom: 18px;
 }
 
-/* Boutons */
-.stButton>button {
+/* BOUTONS */
 
-    background:
-    linear-gradient(
-        90deg,
-        #007A5E,
-        #00A97A
-    );
+.stButton > button {
 
-    color:white !important;
+    background: var(--green-main);
 
-    border:none;
+    color: white !important;
 
-    border-radius:14px;
+    border: none;
 
-    font-weight:700;
+    border-radius: 10px;
 
-    padding:0.65rem 1.2rem;
-
-    box-shadow:
-    0 6px 14px rgba(0,122,94,0.25);
+    font-weight: 600;
 }
 
-.stButton>button:hover {
+.stButton > button:hover {
 
-    background:
-    linear-gradient(
-        90deg,
-        #004D3A,
-        #007A5E
-    );
+    background: var(--green-dark);
 
-    color:white !important;
+    color: white !important;
 }
 
-/* Inputs */
-input, textarea {
+/* METRICS */
 
-    color:#173B35 !important;
-
-    background-color:white !important;
-
-    border-radius:10px !important;
-}
-
-/* Metrics */
 [data-testid="stMetric"] {
 
-    background:white;
+    background: white;
 
-    padding:18px;
+    border-radius: 14px;
 
-    border-radius:20px;
+    padding: 14px;
 
-    border:1px solid var(--border);
-
-    border-left:6px solid var(--main-green);
+    border-left:
+    5px solid var(--green-main);
 
     box-shadow:
-    0 8px 20px rgba(0,77,58,0.10);
+    0 4px 12px rgba(0,107,79,0.08);
 }
 
 [data-testid="stMetric"] * {
 
-    color:#173B35 !important;
+    color: var(--text-dark) !important;
 }
 
-/* Login */
-.login-title {
+/* INPUTS */
 
-    text-align:center;
+input, textarea {
 
-    color:#004D3A;
+    color: var(--text-dark) !important;
 
-    font-size:34px;
-
-    font-weight:800;
-}
-
-.login-subtitle {
-
-    text-align:center;
-
-    color:#007A5E;
-
-    font-size:18px;
-
-    margin-bottom:20px;
+    background: white !important;
 }
 
 </style>
@@ -216,7 +164,7 @@ if "nom_utilisateur" not in st.session_state:
 
 def login():
 
-    col1, col2, col3 = st.columns([1,1.6,1])
+    col1, col2, col3 = st.columns([1,1.5,1])
 
     with col2:
 
@@ -232,15 +180,13 @@ def login():
                 width=240
             )
 
-        st.markdown(
-            '<div class="login-title">PCCT Intelligent System</div>',
-            unsafe_allow_html=True
+        st.title("PCCT Intelligent System")
+
+        st.subheader(
+            "Connexion sécurisée"
         )
 
-        st.markdown(
-            '<div class="login-subtitle">Plateforme intelligente PROMAMEC</div>',
-            unsafe_allow_html=True
-        )
+        st.markdown("---")
 
         nom = st.text_input(
             "Nom utilisateur"
@@ -311,29 +257,21 @@ def init_db():
         id INTEGER PRIMARY KEY AUTOINCREMENT,
 
         date TEXT,
-
         nom TEXT,
-
         prenom TEXT,
-
         cin TEXT,
 
         sexe TEXT,
-
         age INTEGER,
 
         poids REAL,
-
         taille REAL,
 
         type_examen TEXT,
-
         protocole TEXT,
 
         imc REAL,
-
         dose REAL,
-
         snr REAL,
 
         qualite TEXT
@@ -431,7 +369,7 @@ def qualite_image(snr):
     else:
         return "Insuffisante"
 
-def generer_maintenance(numero_serie):
+def maintenance_scanner(numero_serie):
 
     if numero_serie == "NS-PCCT-2026-001":
 
@@ -477,7 +415,7 @@ if os.path.exists("imagespromamec.png"):
 
     st.sidebar.image(
         "imagespromamec.png",
-        width=180
+        width=170
     )
 
 st.sidebar.markdown(
@@ -547,8 +485,7 @@ if menu == "Accueil":
 
     <p>
 
-    Cette application propose une solution
-    intelligente permettant :
+    Cette application permet :
 
     • optimisation automatique de dose
 
@@ -721,6 +658,8 @@ elif menu == "Workflow acquisition":
 
             progress = st.progress(0)
 
+            status = st.empty()
+
             etapes = [
 
                 "Connexion scanner...",
@@ -730,8 +669,6 @@ elif menu == "Workflow acquisition":
                 "Analyse SNR...",
                 "Résultats générés..."
             ]
-
-            status = st.empty()
 
             for i, e in enumerate(etapes):
 
@@ -827,7 +764,7 @@ elif menu == "Analyse SNR":
     )
 
 # =========================================================
-# MAINTENANCE PREVENTIVE
+# MAINTENANCE PRÉVENTIVE
 # =========================================================
 
 elif menu == "Maintenance préventive":
@@ -840,7 +777,7 @@ elif menu == "Maintenance préventive":
 
     for serial in SCANNERS:
 
-        m = generer_maintenance(serial)
+        m = maintenance_scanner(serial)
 
         data.append({
 
@@ -883,7 +820,7 @@ elif menu == "Maintenance scanner":
 
     else:
 
-        m = generer_maintenance(
+        m = maintenance_scanner(
             numero_serie
         )
 
