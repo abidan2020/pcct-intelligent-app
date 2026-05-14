@@ -170,87 +170,172 @@ if "nom_utilisateur" not in st.session_state:
     st.session_state.nom_utilisateur = ""
 
 # =========================================================
-# LOGIN
+# LOGIN PROMAMEC MODERNE
 # =========================================================
 
 def login():
 
-    col1, col2, col3 = st.columns([1,1.4,1])
+    st.markdown("""
+    <style>
 
-    with col2:
+    .login-container{
+        display:flex;
+        height:100vh;
+        margin-top:-80px;
+    }
 
-        st.markdown(
-            '<div class="card">',
-            unsafe_allow_html=True
+    .left-login{
+
+        flex:1.2;
+
+        background:white;
+
+        display:flex;
+
+        justify-content:center;
+
+        align-items:center;
+
+        padding:60px;
+    }
+
+    .right-login{
+
+        flex:0.5;
+
+        background:#00A99D;
+    }
+
+    .login-card{
+
+        width:100%;
+
+        max-width:420px;
+
+        background:white;
+
+        padding:40px;
+
+        border-radius:14px;
+
+        box-shadow:0 8px 30px rgba(0,0,0,0.08);
+    }
+
+    .login-title{
+
+        font-size:38px;
+
+        font-weight:800;
+
+        color:#1F2933;
+
+        margin-top:20px;
+
+        margin-bottom:5px;
+    }
+
+    .login-subtitle{
+
+        color:#6B7280;
+
+        margin-bottom:35px;
+
+        font-size:16px;
+    }
+
+    </style>
+    """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <div class="login-container">
+
+        <div class="left-login">
+
+            <div class="login-card">
+
+    """, unsafe_allow_html=True)
+
+    # =========================
+    # LOGO
+    # =========================
+
+    if os.path.exists(LOGO_PATH):
+
+        st.image(
+            LOGO_PATH,
+            width=230
         )
 
-        if os.path.exists(LOGO_PATH):
+    st.markdown(
+        '<div class="login-title">Connexion</div>',
+        unsafe_allow_html=True
+    )
 
-            st.image(
-                LOGO_PATH,
-                width=240
+    st.markdown(
+        '<div class="login-subtitle">PROMAMEC PCCT Intelligent System</div>',
+        unsafe_allow_html=True
+    )
+
+    # =========================
+    # INPUTS
+    # =========================
+
+    nom = st.text_input(
+        "Nom utilisateur"
+    )
+
+    identifiant = st.text_input(
+        "ID utilisateur",
+        type="password"
+    )
+
+    # =========================
+    # LOGIN BUTTON
+    # =========================
+
+    if st.button("Se connecter"):
+
+        if (
+            nom.strip().lower()
+            == "yassine abidan"
+            and identifiant == "12345"
+        ):
+
+            st.session_state.connecte = True
+            st.session_state.role = "Technicien de radiologie"
+            st.session_state.nom_utilisateur = "Yassine Abidan"
+
+            st.rerun()
+
+        elif (
+            nom.strip().lower()
+            == "khadija abidan"
+            and identifiant == "67890"
+        ):
+
+            st.session_state.connecte = True
+            st.session_state.role = "Ingénieure biomédicale"
+            st.session_state.nom_utilisateur = "Khadija ABIDAN"
+
+            st.rerun()
+
+        else:
+
+            st.error(
+                "Nom ou ID incorrect."
             )
 
-        st.title(
-            "PCCT Intelligent System"
-        )
+    st.markdown("""
 
-        st.subheader(
-            "Connexion sécurisée"
-        )
+            </div>
 
-        nom = st.text_input(
-            "Nom utilisateur"
-        )
+        </div>
 
-        identifiant = st.text_input(
-            "ID utilisateur",
-            type="password"
-        )
+        <div class="right-login"></div>
 
-        if st.button("Se connecter"):
+    </div>
 
-            if (
-                nom.strip().lower()
-                == "yassine abidan"
-                and identifiant == "12345"
-            ):
-
-                st.session_state.connecte = True
-                st.session_state.role = "Technicien de radiologie"
-                st.session_state.nom_utilisateur = "Yassine Abidan"
-
-                st.rerun()
-
-            elif (
-                nom.strip().lower()
-                == "khadija abidan"
-                and identifiant == "67890"
-            ):
-
-                st.session_state.connecte = True
-                st.session_state.role = "Ingénieure biomédicale"
-                st.session_state.nom_utilisateur = "Khadija ABIDAN"
-
-                st.rerun()
-
-            else:
-
-                st.error(
-                    "Nom ou ID incorrect."
-                )
-
-        st.markdown(
-            '</div>',
-            unsafe_allow_html=True
-        )
-
-if not st.session_state.connecte:
-
-    login()
-
-    st.stop()
-
+    """, unsafe_allow_html=True)
 # =========================================================
 # DATABASE
 # =========================================================
