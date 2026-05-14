@@ -12,45 +12,57 @@ from reportlab.pdfgen import canvas
 st.set_page_config(page_title="PCCT Intelligent System", layout="wide")
 
 DB_NAME = "patients_pcct.db"
+LOGO_PATH = "imagespromamec.png"
 
 # =========================
 # LOGIN FIXE
 # =========================
-if "connecte" not in st.session_state:
-    st.session_state.connecte = False
-
-if "role" not in st.session_state:
-    st.session_state.role = ""
-
-if "nom_utilisateur" not in st.session_state:
-    st.session_state.nom_utilisateur = ""
-
 def page_login():
-    st.title("Connexion au système PCCT")
+    st.markdown("""
+    <style>
+    .login-box {
+        background: rgba(5,20,35,0.90);
+        padding: 35px;
+        border-radius: 22px;
+        border: 1px solid rgba(14,165,233,0.35);
+        box-shadow: 0 0 25px rgba(0,0,0,0.55);
+        text-align: center;
+        margin-top: 60px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
-    nom = st.text_input("Nom utilisateur")
-    identifiant = st.text_input("ID utilisateur", type="password")
+    col1, col2, col3 = st.columns([1, 1.4, 1])
 
-    if st.button("Se connecter"):
-        if nom.strip().lower() == "yassine abidan" and identifiant == "12345":
-            st.session_state.connecte = True
-            st.session_state.role = "Technicien de radiologie"
-            st.session_state.nom_utilisateur = "Yassine Abidan"
-            st.rerun()
+    with col2:
+        st.markdown('<div class="login-box">', unsafe_allow_html=True)
 
-        elif nom.strip().lower() == "khadija abidan" and identifiant == "67890":
-            st.session_state.connecte = True
-            st.session_state.role = "Ingénieure biomédicale"
-            st.session_state.nom_utilisateur = "Khadija ABIDAN"
-            st.rerun()
+        if os.path.exists(LOGO_PATH):
+            st.image(LOGO_PATH, width=230)
 
-        else:
-            st.error("Nom ou ID incorrect.")
+        st.title("Connexion au système PCCT")
+        st.subheader("PROMAMEC Intelligent System")
 
-if not st.session_state.connecte:
-    page_login()
-    st.stop()
+        nom = st.text_input("Nom utilisateur")
+        identifiant = st.text_input("ID utilisateur", type="password")
 
+        if st.button("Se connecter"):
+            if nom.strip().lower() == "yassine abidan" and identifiant == "12345":
+                st.session_state.connecte = True
+                st.session_state.role = "Technicien de radiologie"
+                st.session_state.nom_utilisateur = "Yassine Abidan"
+                st.rerun()
+
+            elif nom.strip().lower() == "khadija abidan" and identifiant == "67890":
+                st.session_state.connecte = True
+                st.session_state.role = "Ingénieure biomédicale"
+                st.session_state.nom_utilisateur = "Khadija ABIDAN"
+                st.rerun()
+
+            else:
+                st.error("Nom ou ID incorrect.")
+
+        st.markdown('</div>', unsafe_allow_html=True)
 # =========================
 # BACKGROUND
 # =========================
@@ -442,28 +454,11 @@ examens = [
 # =========================
 # SIDEBAR
 # =========================
+
+if os.path.exists(LOGO_PATH):
+    st.sidebar.image(LOGO_PATH, width=170)
+
 st.sidebar.title("PCCT Intelligent System")
-st.sidebar.write(f"Utilisateur : {st.session_state.nom_utilisateur}")
-st.sidebar.write(f"Rôle : {st.session_state.role}")
-
-if st.sidebar.button("Déconnexion"):
-    st.session_state.connecte = False
-    st.session_state.role = ""
-    st.session_state.nom_utilisateur = ""
-    st.rerun()
-
-menu = st.sidebar.radio(
-    "Navigation",
-    [
-        "Accueil",
-        "Technicien",
-        "SNR",
-        "Maintenance",
-        "Dashboard",
-        "Validation",
-        "Rapport"
-    ]
-)
 
 # =========================
 # ACCUEIL
