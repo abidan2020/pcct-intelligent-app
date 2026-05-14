@@ -39,7 +39,14 @@ st.markdown("""
 /* GENERAL */
 
 .stApp{
-    background:var(--bg);
+    background:#F7FAFA;
+}
+
+/* TITRES */
+
+h1,h2,h3,h4{
+    color:#1F2933 !important;
+    font-weight:800 !important;
 }
 
 /* SIDEBAR */
@@ -53,21 +60,14 @@ st.markdown("""
     color:#1F2933 !important;
 }
 
-/* TITRES */
-
-h1,h2,h3,h4{
-    color:#1F2933 !important;
-    font-weight:800 !important;
-}
-
-/* CARD */
+/* CARDS */
 
 .card{
     background:white;
     padding:25px;
     border-radius:14px;
     border:1px solid #E5E7EB;
-    box-shadow:0 6px 20px rgba(0,0,0,0.06);
+    box-shadow:0 6px 20px rgba(0,0,0,0.05);
     margin-bottom:20px;
 }
 
@@ -104,25 +104,37 @@ h1,h2,h3,h4{
 /* BUTTON */
 
 .stButton > button{
+
     background:#00A99D;
+
     color:white !important;
+
     border:none;
-    border-radius:6px;
+
+    border-radius:8px;
+
     font-weight:700;
 }
 
 .stButton > button:hover{
+
     background:#00857C;
+
     color:white !important;
 }
 
-/* METRIC */
+/* METRICS */
 
 [data-testid="stMetric"]{
+
     background:white;
+
     border-radius:10px;
+
     padding:18px;
+
     border-top:4px solid #00A99D;
+
     box-shadow:0 4px 12px rgba(0,0,0,0.05);
 }
 
@@ -155,121 +167,192 @@ def login():
     st.markdown("""
     <style>
 
-    .login-container{
+    .main .block-container{
+        padding-top:0rem;
+        padding-bottom:0rem;
+        padding-left:0rem;
+        padding-right:0rem;
+        max-width:100%;
+    }
+
+    .login-wrapper{
         display:flex;
         height:100vh;
-        margin-top:-80px;
-    }
-
-    .left-login{
-        flex:1.2;
-        background:white;
-        display:flex;
-        justify-content:center;
-        align-items:center;
-        padding:60px;
-    }
-
-    .right-login{
-        flex:0.5;
-        background:#00A99D;
-    }
-
-    .login-card{
         width:100%;
-        max-width:420px;
+        overflow:hidden;
+    }
+
+    .login-left{
+
+        flex:1.25;
+
         background:white;
-        padding:40px;
-        border-radius:14px;
-        box-shadow:0 8px 30px rgba(0,0,0,0.08);
+
+        display:flex;
+
+        justify-content:center;
+
+        align-items:center;
+    }
+
+    .login-right{
+
+        flex:0.45;
+
+        background:#00A99D;
+
+        height:100vh;
+    }
+
+    .login-content{
+
+        width:100%;
+
+        max-width:420px;
+
+        padding:20px;
     }
 
     .login-title{
-        font-size:38px;
+
+        font-size:42px;
+
         font-weight:800;
+
         color:#1F2933;
-        margin-top:20px;
-        margin-bottom:5px;
+
+        margin-top:25px;
+
+        margin-bottom:8px;
     }
 
     .login-subtitle{
+
         color:#6B7280;
-        margin-bottom:35px;
+
         font-size:16px;
+
+        margin-bottom:35px;
+    }
+
+    div[data-testid="stTextInput"] input {
+
+        border-radius:8px;
+
+        border:1px solid #D1D5DB;
+
+        padding:12px;
+    }
+
+    .stButton > button {
+
+        width:100%;
+
+        background:#00A99D;
+
+        color:white !important;
+
+        border:none;
+
+        border-radius:8px;
+
+        font-weight:700;
+
+        padding:12px;
+    }
+
+    .stButton > button:hover {
+
+        background:#00857C;
+
+        color:white !important;
     }
 
     </style>
     """, unsafe_allow_html=True)
 
-    col1, col2 = st.columns([3,1])
+    st.markdown("""
+    <div class="login-wrapper">
 
-    with col1:
+        <div class="login-left">
 
-        st.markdown('<div class="login-card">', unsafe_allow_html=True)
+            <div class="login-content">
+    """, unsafe_allow_html=True)
 
-        if os.path.exists(LOGO_PATH):
-            st.image(LOGO_PATH, width=230)
+    if os.path.exists(LOGO_PATH):
 
-        st.markdown(
-            '<div class="login-title">Connexion</div>',
-            unsafe_allow_html=True
+        st.image(
+            LOGO_PATH,
+            width=240
         )
 
-        st.markdown(
-            '<div class="login-subtitle">PROMAMEC PCCT Intelligent System</div>',
-            unsafe_allow_html=True
-        )
+    st.markdown(
+        '<div class="login-title">Connexion</div>',
+        unsafe_allow_html=True
+    )
 
-        nom = st.text_input("Nom utilisateur")
+    st.markdown(
+        '<div class="login-subtitle">PROMAMEC PCCT Intelligent System</div>',
+        unsafe_allow_html=True
+    )
 
-        identifiant = st.text_input(
-            "ID utilisateur",
-            type="password"
-        )
+    nom = st.text_input(
+        "Nom utilisateur"
+    )
 
-        if st.button("Se connecter"):
+    identifiant = st.text_input(
+        "ID utilisateur",
+        type="password"
+    )
 
-            if (
-                nom.strip().lower()
-                == "yassine abidan"
-                and identifiant == "12345"
-            ):
+    if st.button("Se connecter"):
 
-                st.session_state.connecte = True
-                st.session_state.role = "Technicien de radiologie"
-                st.session_state.nom_utilisateur = "Yassine Abidan"
+        if (
+            nom.strip().lower()
+            == "yassine abidan"
+            and identifiant == "12345"
+        ):
 
-                st.rerun()
+            st.session_state.connecte = True
+            st.session_state.role = "Technicien de radiologie"
+            st.session_state.nom_utilisateur = "Yassine Abidan"
 
-            elif (
-                nom.strip().lower()
-                == "khadija abidan"
-                and identifiant == "67890"
-            ):
+            st.rerun()
 
-                st.session_state.connecte = True
-                st.session_state.role = "Ingénieure biomédicale"
-                st.session_state.nom_utilisateur = "Khadija ABIDAN"
+        elif (
+            nom.strip().lower()
+            == "khadija abidan"
+            and identifiant == "67890"
+        ):
 
-                st.rerun()
+            st.session_state.connecte = True
+            st.session_state.role = "Ingénieure biomédicale"
+            st.session_state.nom_utilisateur = "Khadija ABIDAN"
 
-            else:
+            st.rerun()
 
-                st.error("Nom ou ID incorrect.")
+        else:
 
-        st.markdown('</div>', unsafe_allow_html=True)
+            st.error(
+                "Nom ou ID incorrect."
+            )
 
-    with col2:
-        st.markdown("""
-        <div style="
-        background:#00A99D;
-        height:100vh;
-        border-radius:0px;">
+    st.markdown("""
+
+            </div>
+
         </div>
-        """, unsafe_allow_html=True)
+
+        <div class="login-right"></div>
+
+    </div>
+
+    """, unsafe_allow_html=True)
 
 if not st.session_state.connecte:
+
     login()
+
     st.stop()
 
 # =========================================================
@@ -294,6 +377,7 @@ def init_db():
         sexe TEXT,
 
         age INTEGER,
+
         poids REAL,
         taille REAL,
 
@@ -458,9 +542,8 @@ if menu == "Accueil":
         Optimisation automatique
         de dose patient,
         estimation SNR,
-        qualité image,
-        aide décisionnelle
-        et génération de rapports.
+        qualité image
+        et aide décisionnelle.
 
         </p>
 
@@ -588,73 +671,38 @@ elif menu == "Workflow acquisition":
 
     if st.button("Lancer acquisition IA"):
 
-        if (
-            nom == ""
-            or prenom == ""
-            or cin == ""
-            or numero_serie not in SCANNERS
-        ):
+        imc = calcul_imc(
+            poids,
+            taille
+        )
 
-            st.error(
-                "Veuillez compléter les informations"
-            )
+        dose = calcul_dose(
+            age,
+            imc
+        )
 
-        else:
+        snr = calcul_snr(
+            age,
+            imc,
+            dose
+        )
 
-            progress = st.progress(0)
+        r1,r2,r3 = st.columns(3)
 
-            status = st.empty()
+        r1.metric(
+            "IMC",
+            round(imc,2)
+        )
 
-            etapes = [
+        r2.metric(
+            "Dose",
+            f"{dose} mGy"
+        )
 
-                "Connexion scanner...",
-                "Analyse patient...",
-                "Calcul IMC...",
-                "Optimisation dose...",
-                "Analyse SNR...",
-                "Résultats générés..."
-            ]
-
-            for i, e in enumerate(etapes):
-
-                status.info(e)
-
-                progress.progress(
-                    int((i+1)/len(etapes)*100)
-                )
-
-            imc = calcul_imc(
-                poids,
-                taille
-            )
-
-            dose = calcul_dose(
-                age,
-                imc
-            )
-
-            snr = calcul_snr(
-                age,
-                imc,
-                dose
-            )
-
-            r1,r2,r3 = st.columns(3)
-
-            r1.metric(
-                "IMC",
-                round(imc,2)
-            )
-
-            r2.metric(
-                "Dose",
-                f"{dose} mGy"
-            )
-
-            r3.metric(
-                "SNR",
-                snr
-            )
+        r3.metric(
+            "SNR",
+            snr
+        )
 
 # =========================================================
 # ANALYSE SNR
