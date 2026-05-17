@@ -193,7 +193,25 @@ def page_login():
             '<div class="login-box">',
             unsafe_allow_html=True
         )
+st.markdown("""
 
+<div style="
+border:1px solid rgba(14,165,233,0.35);
+border-radius:25px;
+padding:18px;
+margin-bottom:30px;
+text-align:center;
+font-size:28px;
+font-weight:800;
+color:#0ea5e9;
+background:rgba(7,25,43,0.55);
+">
+
+PROMAMEC : Healthcare Experts
+
+</div>
+
+""", unsafe_allow_html=True)
         st.title("Connexion au système PCCT")
 
         st.subheader(
