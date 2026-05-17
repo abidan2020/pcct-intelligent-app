@@ -967,7 +967,9 @@ elif menu == "Gestion scanners":
                     "Ce numéro de série existe déjà."
                 )
 
-    st.markdown("### Liste des scanners")
+    st.markdown(
+        "### Liste des scanners"
+    )
 
     df_scanners = charger_scanners()
 
