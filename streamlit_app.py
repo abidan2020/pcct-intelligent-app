@@ -630,7 +630,7 @@ if menu == "Accueil":
     <h3>Objectif</h3>
     <p>
     Cette application simule un système intelligent pour adapter la dose scanner
-    selon le patient, préserver un SNR acceptable et suivre l'état du scanner.
+   selon le patient, préserver un SNR acceptable et suivre l’état du scanner.
     </p>
     </div>
     """, unsafe_allow_html=True)
