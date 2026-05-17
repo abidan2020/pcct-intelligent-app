@@ -684,7 +684,7 @@ elif menu == "Maintenance":
     with col1:
         scanner = st.selectbox(
             "Scanner concerné",
-            ["Scanner PCCT-01", "Scanner PCCT-02", "Scanner PCCT-03"]
+            ["Scanner X - NeuViz 16 Classic - Neusoft", "Scanner X + TEP NeuWise", "NeuViz ACE (SP) CT"]
         )
 
         snr_sys = st.number_input("SNR système", min_value=0.0, max_value=100.0, value=0.0)
