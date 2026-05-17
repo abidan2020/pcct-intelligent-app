@@ -209,7 +209,7 @@ def init_db():
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
 
-    c.execute("""
+    c.execute(
     CREATE TABLE IF NOT EXISTS patients (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         date TEXT,
@@ -241,9 +241,8 @@ def init_db():
     date_installation TEXT,
     etat_initial TEXT
 
-    )
-    """)
-
+   )
+     )
     conn.commit()
     conn.close()
 
