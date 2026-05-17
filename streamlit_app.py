@@ -230,6 +230,17 @@ def init_db():
         ctdivol REAL,
         dlp REAL,
         recommandation TEXT
+        c.execute("""
+    CREATE TABLE IF NOT EXISTS scanners (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nom TEXT,
+    marque TEXT,
+    modele TEXT,
+    numero_serie TEXT UNIQUE,
+    localisation TEXT,
+    date_installation TEXT,
+    etat_initial TEXT
+
     )
     """)
 
@@ -270,6 +281,54 @@ def charger_patients():
     conn = sqlite3.connect(DB_NAME)
     df = pd.read_sql_query("SELECT * FROM patients", conn)
     conn.close()
+    return df
+    def ajouter_scanner(nom, marque, modele, numero_serie, localisation, date_installation, etat_initial):
+
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+
+    try:
+
+        c.execute("""
+        INSERT INTO scanners (
+            nom, marque, modele, numero_serie,
+            localisation, date_installation, etat_initial
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (
+            nom,
+            marque,
+            modele,
+            numero_serie,
+            localisation,
+            date_installation,
+            etat_initial
+        ))
+
+        conn.commit()
+
+        ok = True
+
+    except sqlite3.IntegrityError:
+
+        ok = False
+
+    conn.close()
+
+    return ok
+
+
+def charger_scanners():
+
+    conn = sqlite3.connect(DB_NAME)
+
+    df = pd.read_sql_query(
+        "SELECT * FROM scanners",
+        conn
+    )
+
+    conn.close()
+
     return df
 
 def modifier_patient(patient_id, patient):
@@ -544,13 +603,16 @@ if st.sidebar.button("Déconnexion"):
 menu = st.sidebar.radio(
     "Navigation",
     [
-        "Accueil",
-        "Technicien",
-        "SNR",
-        "Maintenance",
-        "Dashboard",
-        "Validation",
-        "Rapport"
+        
+    "Accueil",
+    "Technicien",
+    "SNR",
+    "Maintenance",
+    "Gestion scanners",
+    "Dashboard",
+    "Validation",
+    "Rapport"
+
     ]
 )
 
@@ -664,7 +726,7 @@ elif menu == "SNR":
     imc_v = st.slider("IMC", 15, 45, 25)
     age_v = st.slider("Âge", 10, 90, 40)
 
-    doses = np.linspace(3, 60, 40)
+    doses = np.linspace(3, 60, 40) 
     snrs = [calcul_snr(age_v, imc_v, d) for d in doses]
 
     df = pd.DataFrame({"Dose": doses, "SNR": snrs})
@@ -817,6 +879,110 @@ elif menu == "Maintenance":
 # =========================
 # DASHBOARD
 # =========================
+elif menu == "Gestion scanners":
+
+    st.title("Gestion du parc scanner")
+
+    st.markdown("""
+
+    <div class="card">
+
+    <h3>
+    Ajouter un nouveau scanner
+    </h3>
+
+    </div>
+
+    """, unsafe_allow_html=True)
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+
+        nom_scanner = st.text_input(
+            "Nom du scanner"
+        )
+
+        marque = st.text_input(
+            "Marque",
+            value="Neusoft"
+        )
+
+        modele = st.text_input(
+            "Modèle"
+        )
+
+        numero_serie = st.text_input(
+            "Numéro de série"
+        )
+
+    with col2:
+
+        localisation = st.text_input(
+            "Localisation"
+        )
+
+        date_installation = st.date_input(
+            "Date d’installation"
+        )
+
+        etat_initial = st.selectbox(
+            "État initial",
+            [
+                "Stable",
+                "À surveiller",
+                "Critique"
+            ]
+        )
+
+    if st.button("Ajouter le scanner"):
+
+        if nom_scanner == "" or numero_serie == "":
+
+            st.error(
+                "Veuillez compléter les informations."
+            )
+
+        else:
+
+            ok = ajouter_scanner(
+                nom_scanner,
+                marque,
+                modele,
+                numero_serie,
+                localisation,
+                str(date_installation),
+                etat_initial
+            )
+
+            if ok:
+
+                st.success(
+                    "Scanner ajouté avec succès."
+                )
+
+            else:
+
+                st.warning(
+                    "Ce numéro de série existe déjà."
+                )
+
+    st.markdown("### Liste des scanners")
+
+    df_scanners = charger_scanners()
+
+    if df_scanners.empty:
+
+        st.info(
+            "Aucun scanner enregistré."
+        )
+
+    else:
+
+        st.dataframe(
+            df_scanners,
+            use_container_width=True
+        )
 elif menu == "Dashboard":
     set_bg("rapport.png")
     st.title("Dashboard global")
