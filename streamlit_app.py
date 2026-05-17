@@ -205,47 +205,81 @@ h1, h2, h3, p, label, div {color:white;}
 # =========================
 # DATABASE
 # =========================
+
 def init_db():
+
     conn = sqlite3.connect(DB_NAME)
+
     c = conn.cursor()
 
-    c.execute(
+    # =========================
+    # TABLE PATIENTS
+    # =========================
+
+    c.execute("""
+
     CREATE TABLE IF NOT EXISTS patients (
+
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+
         date TEXT,
         nom TEXT,
         prenom TEXT,
         cin TEXT UNIQUE,
+
         sexe TEXT,
         type_examen TEXT,
+
         age INTEGER,
+
         poids REAL,
         taille REAL,
+
         imc REAL,
         classe_imc TEXT,
+
         dose REAL,
         snr REAL,
+
         kvp INTEGER,
         mas INTEGER,
+
         ctdivol REAL,
         dlp REAL,
+
         recommandation TEXT
-        c.execute("""
+    )
+
+    """)
+
+    # =========================
+    # TABLE SCANNERS
+    # =========================
+
+    c.execute("""
+
     CREATE TABLE IF NOT EXISTS scanners (
+
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nom TEXT,
-    marque TEXT,
-    modele TEXT,
-    numero_serie TEXT UNIQUE,
-    localisation TEXT,
-    date_installation TEXT,
-    etat_initial TEXT
 
-   )
-     )
+        nom TEXT,
+        marque TEXT,
+        modele TEXT,
+
+        numero_serie TEXT UNIQUE,
+
+        localisation TEXT,
+
+        date_installation TEXT,
+
+        etat_initial TEXT
+    )
+
+    """)
+
     conn.commit()
-    conn.close()
 
+    conn.close()
 def ajouter_patient(patient):
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
