@@ -19,7 +19,7 @@ st.set_page_config(
 )
 
 DB_NAME = "patients_pcct.db"
-LOGO_PATH = "imagespromamec.png"
+
 
 # =========================================================
 # STYLE
@@ -194,13 +194,6 @@ def page_login():
             unsafe_allow_html=True
         )
 
-        if os.path.exists(LOGO_PATH):
-
-            st.image(
-                LOGO_PATH,
-                width=230
-            )
-
         st.title("Connexion au système PCCT")
 
         st.subheader(
@@ -362,12 +355,6 @@ def calcul_snr(age, imc, dose):
 # SIDEBAR
 # =========================================================
 
-if os.path.exists(LOGO_PATH):
-
-    st.sidebar.image(
-        LOGO_PATH,
-        width=170
-    )
 
 st.sidebar.title(
     "PCCT Intelligent System"
