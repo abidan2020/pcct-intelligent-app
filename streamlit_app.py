@@ -169,10 +169,15 @@ if "nom_utilisateur" not in st.session_state:
 # LOGIN
 # =========================================================
 
+# =========================================================
+# LOGIN
+# =========================================================
+
 def page_login():
 
     st.markdown("""
     <style>
+
     .login-box {
         background: rgba(5,20,35,0.90);
         padding: 35px;
@@ -182,6 +187,7 @@ def page_login():
         text-align: center;
         margin-top: 60px;
     }
+
     </style>
     """, unsafe_allow_html=True)
 
@@ -193,25 +199,27 @@ def page_login():
             '<div class="login-box">',
             unsafe_allow_html=True
         )
-st.markdown("""
 
-<div style="
-border:1px solid rgba(14,165,233,0.35);
-border-radius:25px;
-padding:18px;
-margin-bottom:30px;
-text-align:center;
-font-size:28px;
-font-weight:800;
-color:#0ea5e9;
-background:rgba(7,25,43,0.55);
-">
+        st.markdown("""
 
-PROMAMEC : Healthcare Experts
+        <div style="
+        border:1px solid rgba(14,165,233,0.35);
+        border-radius:25px;
+        padding:18px;
+        margin-bottom:30px;
+        text-align:center;
+        font-size:28px;
+        font-weight:800;
+        color:#0ea5e9;
+        background:rgba(7,25,43,0.55);
+        ">
 
-</div>
+        PROMAMEC : Healthcare Experts
 
-""", unsafe_allow_html=True)
+        </div>
+
+        """, unsafe_allow_html=True)
+
         st.title("Connexion au système PCCT")
 
         st.subheader(
@@ -263,13 +271,6 @@ PROMAMEC : Healthcare Experts
             '</div>',
             unsafe_allow_html=True
         )
-
-if not st.session_state.connecte:
-
-    page_login()
-
-    st.stop()
-
 # =========================================================
 # DATABASE
 # =========================================================
