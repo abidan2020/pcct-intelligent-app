@@ -622,7 +622,24 @@ elif menu == "Maintenance":
     col1, col2 = st.columns(2)
 
     with col1:
-        scanner = st.selectbox("Scanner concerné", ["Scanner PCCT-01", "Scanner PCCT-02", "Scanner PCCT-03"])
+       df_scanners = charger_scanners()
+
+if df_scanners.empty:
+    st.warning("Aucun scanner enregistré. Ajoutez d'abord un scanner dans la partie Gestion scanners.")
+    st.stop()
+
+scanner = st.selectbox(
+    "Scanner concerné",
+    df_scanners["nom"].tolist()
+)
+scanner_info = df_scanners[df_scanners["nom"] == scanner].iloc[0]
+
+st.info(
+    f"Marque : {scanner_info['marque']} | "
+    f"Modèle : {scanner_info['modele']} | "
+    f"N° série : {scanner_info['numero_serie']} | "
+    f"Localisation : {scanner_info['localisation']}"
+)
         snr_sys = st.number_input("SNR système", min_value=0.0, max_value=100.0, value=0.0)
         temperature = st.number_input("Température du tube RX (°C)", min_value=0.0, max_value=150.0, value=0.0)
         vibration = st.slider("Vibration du gantry (%)", 0, 100, 0)
