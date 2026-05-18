@@ -13,6 +13,16 @@ st.set_page_config(page_title="PCCT Intelligent System", layout="wide")
 
 DB_NAME = "patients_pcct.db"
 
+def get_base64_image(path):
+    if not os.path.exists(path):
+        return ""
+    with open(path, "rb") as f:
+        return base64.b64encode(f.read()).decode()
+
+# =========================
+# LOGIN
+# =========================
+
 # =========================
 # LOGIN
 # =========================
