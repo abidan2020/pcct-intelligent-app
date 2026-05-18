@@ -916,7 +916,7 @@ elif menu == "Gestion scanners":
 
     st.title("Gestion du parc scanner")
 
-    st.markdown("""
+    st.markdown(
 
     <div class="card">
 
