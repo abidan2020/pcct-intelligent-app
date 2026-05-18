@@ -19,13 +19,7 @@ def get_base64_image(path):
     with open(path, "rb") as f:
         return base64.b64encode(f.read()).decode()
 
-# =========================
-# LOGIN
-# =========================
 
-# =========================
-# LOGIN
-# =========================
 # =========================
 # PAGE LOGIN
 # =========================
@@ -106,10 +100,7 @@ def page_login():
 
     with col2:
 
-        st.markdown(
-            '<div class="login-box">',
-            unsafe_allow_html=True
-        )
+    
 
         # =========================
         # PROMAMEC BAR
