@@ -59,6 +59,10 @@ def page_login():
             '<div class="promamec-bar">PROMAMEC : Healthcare Experts</div>',
             unsafe_allow_html=True
         )
+        st.image(
+          "login.png",
+           width=220
+)
 
         st.title("Connexion au système PCCT")
         st.subheader("PROMAMEC Intelligent System")
