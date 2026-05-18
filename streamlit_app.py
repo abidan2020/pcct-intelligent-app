@@ -58,12 +58,30 @@ def page_login():
         st.markdown(
             '<div class="promamec-bar">PROMAMEC : Healthcare Experts</div>',
             unsafe_allow_html=True
-        )
-        st.image(
-          "login.png",
-           width=220
-)
+def page_login():
+    login_bg = get_base64_image("login.png")
 
+st.markdown(f"""
+<style>
+
+.stApp {{
+
+    background:
+    linear-gradient(
+        rgba(0,0,0,0.70),
+        rgba(0,0,0,0.82)
+    ),
+
+    url("data:image/png;base64,{login_bg}");
+
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}}
+
+</style>
+""", unsafe_allow_html=True)
         st.title("Connexion au système PCCT")
         st.subheader("PROMAMEC Intelligent System")
 
