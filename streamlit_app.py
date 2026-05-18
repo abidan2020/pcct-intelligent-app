@@ -494,7 +494,6 @@ if st.sidebar.button("Déconnexion"):
 # =========================
 # MENU SELON LE RÔLE
 # =========================
-
 if st.session_state.role == "Technicien de radiologie":
 
     menu = st.sidebar.radio(
@@ -503,6 +502,7 @@ if st.session_state.role == "Technicien de radiologie":
             "Accueil",
             "Technicien",
             "SNR",
+            "Maintenance",
             "Dashboard",
             "Validation",
             "Rapport"
@@ -515,6 +515,8 @@ else:
         "Navigation",
         [
             "Accueil",
+            "Technicien",
+            "SNR",
             "Maintenance",
             "Gestion scanners",
             "Dashboard",
