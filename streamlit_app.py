@@ -55,8 +55,6 @@ def page_login():
     col1, col2, col3 = st.columns([1, 1.4, 1])
 
     with col2:
-        st.markdown('<div class="login-box">', unsafe_allow_html=True)
-
         st.markdown(
             '<div class="promamec-bar">PROMAMEC : Healthcare Experts</div>',
             unsafe_allow_html=True
@@ -556,8 +554,6 @@ elif menu == "Technicien":
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown('<div class="card">', unsafe_allow_html=True)
-
         nom = st.text_input("Nom")
         prenom = st.text_input("Prénom")
         cin = st.text_input("CIN")
@@ -570,7 +566,6 @@ elif menu == "Technicien":
 
         bouton = st.button("Calculer et enregistrer")
 
-        st.markdown('</div>', unsafe_allow_html=True)
 
     if age > 0 and poids > 0 and taille > 0:
         patient = creer_patient(nom, prenom, cin, sexe, type_examen, age, poids, taille)
