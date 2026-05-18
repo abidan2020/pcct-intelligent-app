@@ -16,100 +16,200 @@ DB_NAME = "patients_pcct.db"
 # =========================
 # LOGIN
 # =========================
-if "connecte" not in st.session_state:
-    st.session_state.connecte = False
-
-if "role" not in st.session_state:
-    st.session_state.role = ""
-
-if "nom_utilisateur" not in st.session_state:
-    st.session_state.nom_utilisateur = ""
+# =========================
+# PAGE LOGIN
+# =========================
 
 def page_login():
-    st.markdown("""
-    <style>
-    .login-box {
-        background: rgba(5,20,35,0.90);
-        padding: 35px;
-        border-radius: 22px;
-        border: 1px solid rgba(14,165,233,0.35);
-        box-shadow: 0 0 25px rgba(0,0,0,0.55);
-        text-align: center;
-        margin-top: 60px;
-    }
 
-    .promamec-bar {
+    # =========================
+    # IMAGE BACKGROUND LOGIN
+    # =========================
+
+    login_bg = get_base64_image("login.png")
+
+    st.markdown(f"""
+    <style>
+
+    .stApp {{
+
+        background:
+        linear-gradient(
+            rgba(0,0,0,0.70),
+            rgba(0,0,0,0.85)
+        ),
+
+        url("data:image/png;base64,{login_bg}");
+
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+    }}
+
+    .login-box {{
+
+        background: rgba(5,20,35,0.90);
+
+        padding: 35px;
+
+        border-radius: 22px;
+
         border: 1px solid rgba(14,165,233,0.35);
-        border-radius: 25px;
-        padding: 18px;
-        margin-bottom: 30px;
+
+        box-shadow: 0 0 25px rgba(0,0,0,0.55);
+
         text-align: center;
+
+        margin-top: 60px;
+    }}
+
+    .promamec-bar {{
+
+        border: 1px solid rgba(14,165,233,0.35);
+
+        border-radius: 25px;
+
+        padding: 18px;
+
+        margin-bottom: 30px;
+
+        text-align: center;
+
         font-size: 28px;
+
         font-weight: 800;
+
         color: #0ea5e9;
+
         background: rgba(7,25,43,0.55);
-    }
+    }}
+
     </style>
     """, unsafe_allow_html=True)
+
+    # =========================
+    # LOGIN CONTAINER
+    # =========================
 
     col1, col2, col3 = st.columns([1, 1.4, 1])
 
     with col2:
+
+        st.markdown(
+            '<div class="login-box">',
+            unsafe_allow_html=True
+        )
+
+        # =========================
+        # PROMAMEC BAR
+        # =========================
+
         st.markdown(
             '<div class="promamec-bar">PROMAMEC : Healthcare Experts</div>',
             unsafe_allow_html=True
-def page_login():
-    login_bg = get_base64_image("login.png")
+        )
 
-st.markdown(f"""
-<style>
+        # =========================
+        # TITRES
+        # =========================
 
-.stApp {{
-
-    background:
-    linear-gradient(
-        rgba(0,0,0,0.70),
-        rgba(0,0,0,0.82)
-    ),
-
-    url("data:image/png;base64,{login_bg}");
-
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-}}
-
-</style>
-""", unsafe_allow_html=True)
         st.title("Connexion au système PCCT")
-        st.subheader("PROMAMEC Intelligent System")
 
-        nom = st.text_input("Nom utilisateur")
-        identifiant = st.text_input("ID utilisateur", type="password")
+        st.subheader(
+            "PROMAMEC Intelligent System"
+        )
+
+        # =========================
+        # INPUTS
+        # =========================
+
+        nom = st.text_input(
+            "Nom utilisateur"
+        )
+
+        identifiant = st.text_input(
+            "ID utilisateur",
+            type="password"
+        )
+
+        # =========================
+        # BUTTON
+        # =========================
 
         if st.button("Se connecter"):
-            if nom.strip().lower() == "yassine abidan" and identifiant == "12345":
+
+            # =========================
+            # TECHNICIEN
+            # =========================
+
+            if (
+                nom.strip().lower()
+                == "yassine abidan"
+
+                and identifiant == "12345"
+            ):
+
                 st.session_state.connecte = True
-                st.session_state.role = "Technicien de radiologie"
-                st.session_state.nom_utilisateur = "Yassine Abidan"
+
+                st.session_state.role = (
+                    "Technicien de radiologie"
+                )
+
+                st.session_state.nom_utilisateur = (
+                    "Yassine Abidan"
+                )
+
                 st.rerun()
 
-            elif nom.strip().lower() == "khadija abidan" and identifiant == "67890":
+            # =========================
+            # INGÉNIEURE
+            # =========================
+
+            elif (
+                nom.strip().lower()
+                == "khadija abidan"
+
+                and identifiant == "67890"
+            ):
+
                 st.session_state.connecte = True
-                st.session_state.role = "Ingénieure biomédicale"
-                st.session_state.nom_utilisateur = "Khadija ABIDAN"
+
+                st.session_state.role = (
+                    "Ingénieure biomédicale"
+                )
+
+                st.session_state.nom_utilisateur = (
+                    "Khadija ABIDAN"
+                )
+
                 st.rerun()
+
+            # =========================
+            # ERREUR
+            # =========================
 
             else:
-                st.error("Nom ou ID incorrect.")
 
-        st.markdown('</div>', unsafe_allow_html=True)
+                st.error(
+                    "Nom ou ID incorrect."
+                )
+
+        st.markdown(
+            '</div>',
+            unsafe_allow_html=True
+        )
+
+
+# =========================
+# STOP SI NON CONNECTÉ
+# =========================
 
 if not st.session_state.connecte:
-    page_login()
-    st.stop()
 
+    page_login()
+
+    st.stop()
 # =========================
 # BACKGROUND
 # =========================
