@@ -14,9 +14,8 @@ st.set_page_config(page_title="PCCT Intelligent System", layout="wide")
 DB_NAME = "patients_pcct.db"
 
 # =========================
-# LOGIN FIXE
+# LOGIN
 # =========================
-
 if "connecte" not in st.session_state:
     st.session_state.connecte = False
 
@@ -27,117 +26,68 @@ if "nom_utilisateur" not in st.session_state:
     st.session_state.nom_utilisateur = ""
 
 def page_login():
-
     st.markdown("""
     <style>
-
     .login-box {
-
         background: rgba(5,20,35,0.90);
-
         padding: 35px;
-
         border-radius: 22px;
-
         border: 1px solid rgba(14,165,233,0.35);
-
         box-shadow: 0 0 25px rgba(0,0,0,0.55);
-
         text-align: center;
-
         margin-top: 60px;
     }
 
-    .promamec-bar{
-
-        border:1px solid rgba(14,165,233,0.35);
-
-        border-radius:25px;
-
-        padding:18px;
-
-        margin-bottom:30px;
-
-        text-align:center;
-
-        font-size:28px;
-
-        font-weight:800;
-
-        color:#0ea5e9;
-
-        background:rgba(7,25,43,0.55);
+    .promamec-bar {
+        border: 1px solid rgba(14,165,233,0.35);
+        border-radius: 25px;
+        padding: 18px;
+        margin-bottom: 30px;
+        text-align: center;
+        font-size: 28px;
+        font-weight: 800;
+        color: #0ea5e9;
+        background: rgba(7,25,43,0.55);
     }
-
     </style>
     """, unsafe_allow_html=True)
 
     col1, col2, col3 = st.columns([1, 1.4, 1])
 
     with col2:
-
-        st.markdown("""
-
-        <div class="login-box">
-
-        <div class="promamec-bar">
-
-        PROMAMEC : Healthcare Experts
-
-        </div>
-
-        """, unsafe_allow_html=True)
-
-        st.title("Connexion au système PCCT")
-
-        st.subheader("PROMAMEC Intelligent System")
-
-        nom = st.text_input("Nom utilisateur")
-
-        identifiant = st.text_input(
-            "ID utilisateur",
-            type="password"
-        )
-
-        if st.button("Se connecter"):
-
-            if (
-                nom.strip().lower()
-                == "yassine abidan"
-                and identifiant == "12345"
-            ):
-
-                st.session_state.connecte = True
-                st.session_state.role = "Technicien de radiologie"
-                st.session_state.nom_utilisateur = "Yassine Abidan"
-
-                st.rerun()
-
-            elif (
-                nom.strip().lower()
-                == "khadija abidan"
-                and identifiant == "67890"
-            ):
-
-                st.session_state.connecte = True
-                st.session_state.role = "Ingénieure biomédicale"
-                st.session_state.nom_utilisateur = "Khadija ABIDAN"
-
-                st.rerun()
-
-            else:
-
-                st.error("Nom ou ID incorrect.")
+        st.markdown('<div class="login-box">', unsafe_allow_html=True)
 
         st.markdown(
-            "</div>",
+            '<div class="promamec-bar">PROMAMEC : Healthcare Experts</div>',
             unsafe_allow_html=True
         )
 
+        st.title("Connexion au système PCCT")
+        st.subheader("PROMAMEC Intelligent System")
+
+        nom = st.text_input("Nom utilisateur")
+        identifiant = st.text_input("ID utilisateur", type="password")
+
+        if st.button("Se connecter"):
+            if nom.strip().lower() == "yassine abidan" and identifiant == "12345":
+                st.session_state.connecte = True
+                st.session_state.role = "Technicien de radiologie"
+                st.session_state.nom_utilisateur = "Yassine Abidan"
+                st.rerun()
+
+            elif nom.strip().lower() == "khadija abidan" and identifiant == "67890":
+                st.session_state.connecte = True
+                st.session_state.role = "Ingénieure biomédicale"
+                st.session_state.nom_utilisateur = "Khadija ABIDAN"
+                st.rerun()
+
+            else:
+                st.error("Nom ou ID incorrect.")
+
+        st.markdown('</div>', unsafe_allow_html=True)
+
 if not st.session_state.connecte:
-
     page_login()
-
     st.stop()
 
 # =========================
@@ -205,81 +155,50 @@ h1, h2, h3, p, label, div {color:white;}
 # =========================
 # DATABASE
 # =========================
-
 def init_db():
-
     conn = sqlite3.connect(DB_NAME)
-
     c = conn.cursor()
 
-    # =========================
-    # TABLE PATIENTS
-    # =========================
-
     c.execute("""
-
     CREATE TABLE IF NOT EXISTS patients (
-
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-
         date TEXT,
         nom TEXT,
         prenom TEXT,
         cin TEXT UNIQUE,
-
         sexe TEXT,
         type_examen TEXT,
-
         age INTEGER,
-
         poids REAL,
         taille REAL,
-
         imc REAL,
         classe_imc TEXT,
-
         dose REAL,
         snr REAL,
-
         kvp INTEGER,
         mas INTEGER,
-
         ctdivol REAL,
         dlp REAL,
-
         recommandation TEXT
     )
-
     """)
 
-    # =========================
-    # TABLE SCANNERS
-    # =========================
-
     c.execute("""
-
     CREATE TABLE IF NOT EXISTS scanners (
-
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-
         nom TEXT,
         marque TEXT,
         modele TEXT,
-
         numero_serie TEXT UNIQUE,
-
         localisation TEXT,
-
         date_installation TEXT,
-
         etat_initial TEXT
     )
-
     """)
 
     conn.commit()
-
     conn.close()
+
 def ajouter_patient(patient):
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
@@ -300,10 +219,8 @@ def ajouter_patient(patient):
             patient["kVp"], patient["mAs"], patient["CTDIvol"],
             patient["DLP"], patient["Recommandation"]
         ))
-
         conn.commit()
         success = True
-
     except sqlite3.IntegrityError:
         success = False
 
@@ -314,54 +231,6 @@ def charger_patients():
     conn = sqlite3.connect(DB_NAME)
     df = pd.read_sql_query("SELECT * FROM patients", conn)
     conn.close()
-    return df
-    def ajouter_scanner(nom, marque, modele, numero_serie, localisation, date_installation, etat_initial):
-
-    conn = sqlite3.connect(DB_NAME)
-    c = conn.cursor()
-
-    try:
-
-        c.execute("""
-        INSERT INTO scanners (
-            nom, marque, modele, numero_serie,
-            localisation, date_installation, etat_initial
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (
-            nom,
-            marque,
-            modele,
-            numero_serie,
-            localisation,
-            date_installation,
-            etat_initial
-        ))
-
-        conn.commit()
-
-        ok = True
-
-    except sqlite3.IntegrityError:
-
-        ok = False
-
-    conn.close()
-
-    return ok
-
-
-def charger_scanners():
-
-    conn = sqlite3.connect(DB_NAME)
-
-    df = pd.read_sql_query(
-        "SELECT * FROM scanners",
-        conn
-    )
-
-    conn.close()
-
     return df
 
 def modifier_patient(patient_id, patient):
@@ -393,7 +262,35 @@ def supprimer_patient(patient_id):
     conn.commit()
     conn.close()
 
-# =========================
+def ajouter_scanner(nom, marque, modele, numero_serie, localisation, date_installation, etat_initial):
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+
+    try:
+        c.execute("""
+        INSERT INTO scanners (
+            nom, marque, modele, numero_serie,
+            localisation, date_installation, etat_initial
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (
+            nom, marque, modele, numero_serie,
+            localisation, date_installation, etat_initial
+        ))
+        conn.commit()
+        ok = True
+    except sqlite3.IntegrityError:
+        ok = False
+
+    conn.close()
+    return ok
+
+def charger_scanners():
+    conn = sqlite3.connect(DB_NAME)
+    df = pd.read_sql_query("SELECT * FROM scanners", conn)
+    conn.close()
+    return df
+    # =========================
 # CALCULS PATIENT
 # =========================
 def calcul_imc(poids, taille):
@@ -524,8 +421,7 @@ def generer_excel(df):
 def generer_pdf(patient):
     buffer = BytesIO()
     pdf = canvas.Canvas(buffer, pagesize=A4)
-    largeur, hauteur = A4
-    y = hauteur - 60
+    y = A4[1] - 60
 
     pdf.setFont("Helvetica-Bold", 20)
     pdf.drawString(190, y, "Rapport Patient")
@@ -536,12 +432,6 @@ def generer_pdf(patient):
 
     y -= 45
 
-    def titre(txt):
-        nonlocal y
-        pdf.setFont("Helvetica-Bold", 14)
-        pdf.drawString(50, y, txt)
-        y -= 30
-
     def ligne(label, valeur):
         nonlocal y
         pdf.setFont("Helvetica-Bold", 11)
@@ -550,55 +440,24 @@ def generer_pdf(patient):
         pdf.drawString(220, y, str(valeur))
         y -= 22
 
-    titre("Informations Patient")
-    ligne("Nom", patient.get("nom", patient.get("Nom", "")))
-    ligne("Prénom", patient.get("prenom", patient.get("Prénom", "")))
-    ligne("CIN", patient.get("cin", patient.get("CIN", "")))
-    ligne("Sexe", patient.get("sexe", patient.get("Sexe", "")))
-    ligne("Âge", patient.get("age", patient.get("Age", "")))
-    ligne("Poids", f"{patient.get('poids', patient.get('Poids', ''))} kg")
-    ligne("Taille", f"{patient.get('taille', patient.get('Taille', ''))} cm")
-    ligne("IMC", patient.get("imc", patient.get("IMC", "")))
-    ligne("Classe IMC", patient.get("classe_imc", patient.get("Classe IMC", "")))
+    infos = [
+        ("Nom", patient.get("nom", patient.get("Nom", ""))),
+        ("Prénom", patient.get("prenom", patient.get("Prénom", ""))),
+        ("CIN", patient.get("cin", patient.get("CIN", ""))),
+        ("Sexe", patient.get("sexe", patient.get("Sexe", ""))),
+        ("Âge", patient.get("age", patient.get("Age", ""))),
+        ("IMC", patient.get("imc", patient.get("IMC", ""))),
+        ("Dose", patient.get("dose", patient.get("Dose", ""))),
+        ("SNR", patient.get("snr", patient.get("SNR", ""))),
+        ("kVp", patient.get("kvp", patient.get("kVp", ""))),
+        ("mAs", patient.get("mas", patient.get("mAs", ""))),
+        ("CTDIvol", patient.get("ctdivol", patient.get("CTDIvol", ""))),
+        ("DLP", patient.get("dlp", patient.get("DLP", ""))),
+        ("Recommandation", patient.get("recommandation", patient.get("Recommandation", "")))
+    ]
 
-    y -= 10
-    titre("Examen")
-    ligne("Type d'examen", patient.get("type_examen", patient.get("Type examen", "")))
-
-    y -= 10
-    titre("Paramètres recommandés")
-    ligne("Dose recommandée", f"{patient.get('dose', patient.get('Dose', ''))} mGy")
-    ligne("SNR estimé", patient.get("snr", patient.get("SNR", "")))
-    ligne("kVp", patient.get("kvp", patient.get("kVp", "")))
-    ligne("mAs", patient.get("mas", patient.get("mAs", "")))
-    ligne("CTDIvol", f"{patient.get('ctdivol', patient.get('CTDIvol', ''))} mGy")
-    ligne("DLP", f"{patient.get('dlp', patient.get('DLP', ''))} mGy.cm")
-
-    y -= 10
-    titre("Recommandation IA")
-
-    reco = str(patient.get("recommandation", patient.get("Recommandation", "")))
-    pdf.setFont("Helvetica", 11)
-
-    for i in range(0, len(reco), 80):
-        pdf.drawString(60, y, reco[i:i+80])
-        y -= 18
-
-    y -= 20
-    titre("Conclusion")
-
-    try:
-        snr_value = float(patient.get("snr", patient.get("SNR", 0)))
-    except:
-        snr_value = 0
-
-    conclusion = "Qualité image acceptable." if snr_value >= 50 else "Qualité image insuffisante : ajustement recommandé."
-
-    pdf.setFont("Helvetica", 11)
-    pdf.drawString(60, y, conclusion)
-
-    pdf.setFont("Helvetica-Oblique", 9)
-    pdf.drawString(50, 30, "PCCT Intelligent System")
+    for label, value in infos:
+        ligne(label, value)
 
     pdf.save()
     buffer.seek(0)
@@ -636,16 +495,14 @@ if st.sidebar.button("Déconnexion"):
 menu = st.sidebar.radio(
     "Navigation",
     [
-        
-    "Accueil",
-    "Technicien",
-    "SNR",
-    "Maintenance",
-    "Gestion scanners",
-    "Dashboard",
-    "Validation",
-    "Rapport"
-
+        "Accueil",
+        "Technicien",
+        "SNR",
+        "Maintenance",
+        "Gestion scanners",
+        "Dashboard",
+        "Validation",
+        "Rapport"
     ]
 )
 
@@ -658,26 +515,16 @@ if menu == "Accueil":
     st.title("PCCT Intelligent System")
     st.subheader("Optimisation intelligente de dose, qualité image et maintenance prédictive")
 
-    st.markdown("""
-    <div class="card">
-    <h3>Objectif</h3>
-    <p>
-    Cette application simule un système intelligent pour adapter la dose scanner
-   selon le patient, préserver un SNR acceptable et suivre et surveiller le scanner
-    </p>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(
+        "<div class='card'><h3>Objectif</h3><p>Cette application simule un système intelligent pour adapter la dose scanner selon le patient, préserver un SNR acceptable et surveiller le scanner.</p></div>",
+        unsafe_allow_html=True
+    )
 
     if st.session_state.role == "Ingénieure biomédicale":
-        st.markdown("""
-        <div class="card">
-        <h3>Espace ingénieure biomédicale</h3>
-        <p>
-        Cet espace permet de suivre les performances du scanner, analyser les anomalies,
-        consulter les alertes techniques et préparer les rapports de maintenance.
-        </p>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(
+            "<div class='card'><h3>Espace ingénieure biomédicale</h3><p>Cet espace permet de suivre les performances du scanner, analyser les anomalies, consulter les alertes techniques et préparer les rapports de maintenance.</p></div>",
+            unsafe_allow_html=True
+        )
 
 # =========================
 # TECHNICIEN
@@ -759,7 +606,7 @@ elif menu == "SNR":
     imc_v = st.slider("IMC", 15, 45, 25)
     age_v = st.slider("Âge", 10, 90, 40)
 
-    doses = np.linspace(3, 60, 40) 
+    doses = np.linspace(3, 60, 40)
     snrs = [calcul_snr(age_v, imc_v, d) for d in doses]
 
     df = pd.DataFrame({"Dose": doses, "SNR": snrs})
@@ -772,16 +619,10 @@ elif menu == "Maintenance":
     set_bg("maintenance.png")
     st.title("Maintenance prédictive du scanner PCCT")
 
-    st.markdown("### Paramètres techniques du scanner")
-
     col1, col2 = st.columns(2)
 
     with col1:
-        scanner = st.selectbox(
-            "Scanner concerné",
-            ["Scanner X - NeuViz 16 Classic - Neusoft", "Scanner X + TEP NeuWise", "NeuViz ACE (SP) CT"]
-        )
-
+        scanner = st.selectbox("Scanner concerné", ["Scanner PCCT-01", "Scanner PCCT-02", "Scanner PCCT-03"])
         snr_sys = st.number_input("SNR système", min_value=0.0, max_value=100.0, value=0.0)
         temperature = st.number_input("Température du tube RX (°C)", min_value=0.0, max_value=150.0, value=0.0)
         vibration = st.slider("Vibration du gantry (%)", 0, 100, 0)
@@ -850,42 +691,9 @@ elif menu == "Maintenance":
     c2.metric("État global", f"{couleur} {etat}")
     c3.metric("Scanner", scanner)
 
-    st.markdown("### État des composants")
-
-    d1, d2, d3 = st.columns(3)
-
-    if detecteurs == "Stable":
-        d1.success("Détecteurs : Stable")
-    elif detecteurs == "Légère dégradation":
-        d1.warning("Détecteurs : À surveiller")
-    else:
-        d1.error("Détecteurs : Dégradation importante")
-
-    if temperature < 60:
-        d2.success("Tube RX : Stable")
-    elif temperature < 80:
-        d2.warning("Tube RX : Température élevée")
-    else:
-        d2.error("Tube RX : Surchauffe critique")
-
-    if vibration < 40:
-        d3.success("Gantry : Stable")
-    elif vibration < 70:
-        d3.warning("Gantry : Vibrations anormales")
-    else:
-        d3.error("Gantry : Risque mécanique élevé")
-
-    st.markdown("## Diagnostic technique")
     st.write(f"**Composant suspect :** {composant}")
     st.write(f"**Cause probable :** {cause}")
     st.write(f"**Action recommandée :** {action}")
-
-    if etat == "Stable":
-        st.success("Le scanner fonctionne normalement. Aucune intervention urgente n’est nécessaire.")
-    elif etat == "À surveiller":
-        st.warning("Certaines valeurs sont anormales. Une surveillance préventive est recommandée.")
-    else:
-        st.error("Risque élevé de panne détecté. Une intervention rapide est recommandée.")
 
     df_maintenance = pd.DataFrame({
         "Paramètre": [
@@ -910,74 +718,30 @@ elif menu == "Maintenance":
     st.bar_chart(df_graph.set_index("Paramètre"))
 
 # =========================
-# DASHBOARD
+# GESTION SCANNERS
 # =========================
 elif menu == "Gestion scanners":
-
     st.title("Gestion du parc scanner")
 
-    st.markdown(
-
-    <div class="card">
-
-    <h3>
-    Ajouter un nouveau scanner
-    </h3>
-
-    </div>
-
-       unsafe_allow_html=True)
+    st.write("Ajouter un nouveau scanner")
 
     col1, col2 = st.columns(2)
 
     with col1:
-
-        nom_scanner = st.text_input(
-            "Nom du scanner"
-        )
-
-        marque = st.text_input(
-            "Marque",
-            value="Neusoft"
-        )
-
-        modele = st.text_input(
-            "Modèle"
-        )
-
-        numero_serie = st.text_input(
-            "Numéro de série"
-        )
+        nom_scanner = st.text_input("Nom du scanner")
+        marque = st.text_input("Marque", value="Neusoft")
+        modele = st.text_input("Modèle")
+        numero_serie = st.text_input("Numéro de série")
 
     with col2:
-
-        localisation = st.text_input(
-            "Localisation"
-        )
-
-        date_installation = st.date_input(
-            "Date d’installation"
-        )
-
-        etat_initial = st.selectbox(
-            "État initial",
-            [
-                "Stable",
-                "À surveiller",
-                "Critique"
-            ]
-        )
+        localisation = st.text_input("Localisation")
+        date_installation = st.date_input("Date d’installation")
+        etat_initial = st.selectbox("État initial", ["Stable", "À surveiller", "Critique"])
 
     if st.button("Ajouter le scanner"):
-
         if nom_scanner == "" or numero_serie == "":
-
-            st.error(
-                "Veuillez compléter les informations."
-            )
-
+            st.error("Veuillez compléter les informations.")
         else:
-
             ok = ajouter_scanner(
                 nom_scanner,
                 marque,
@@ -989,35 +753,22 @@ elif menu == "Gestion scanners":
             )
 
             if ok:
-
-                st.success(
-                    "Scanner ajouté avec succès."
-                )
-
+                st.success("Scanner ajouté avec succès.")
             else:
+                st.warning("Ce numéro de série existe déjà.")
 
-                st.warning(
-                    "Ce numéro de série existe déjà."
-                )
-
-    st.markdown(
-        "### Liste des scanners"
-    )
+    st.write("Liste des scanners")
 
     df_scanners = charger_scanners()
 
     if df_scanners.empty:
-
-        st.info(
-            "Aucun scanner enregistré."
-        )
-
+        st.info("Aucun scanner enregistré.")
     else:
+        st.dataframe(df_scanners, use_container_width=True)
 
-        st.dataframe(
-            df_scanners,
-            use_container_width=True
-        )
+# =========================
+# DASHBOARD
+# =========================
 elif menu == "Dashboard":
     set_bg("rapport.png")
     st.title("Dashboard global")
@@ -1123,10 +874,7 @@ elif menu == "Validation":
     st.subheader("Comparaison Dose / SNR")
     st.bar_chart(df_val.set_index("Cas test")[["Dose", "SNR"]])
 
-    st.info(
-        "Cette validation montre que la dose diminue chez les patients minces ou pédiatriques, "
-        "et augmente chez les patients obèses pour maintenir un SNR acceptable."
-    )
+    st.info("Cette validation montre que la dose diminue chez les patients minces ou pédiatriques, et augmente chez les patients obèses pour maintenir un SNR acceptable.")
 
 # =========================
 # RAPPORT
@@ -1157,11 +905,7 @@ elif menu == "Rapport":
             prenom = st.text_input("Prénom", patient["prenom"])
             cin = st.text_input("CIN", patient["cin"])
 
-            sexe = st.selectbox(
-                "Sexe",
-                ["Homme", "Femme"],
-                index=0 if patient["sexe"] == "Homme" else 1
-            )
+            sexe = st.selectbox("Sexe", ["Homme", "Femme"], index=0 if patient["sexe"] == "Homme" else 1)
 
             type_examen = st.selectbox(
                 "Type d'examen",
@@ -1213,3 +957,4 @@ elif menu == "Rapport":
             supprimer_patient(patient_id)
             st.success("Patient supprimé.")
             st.rerun()
+    
