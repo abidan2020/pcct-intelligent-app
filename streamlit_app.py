@@ -540,9 +540,9 @@ elif menu == "Dashboard":
             st.rerun()
         except Exception as e:
             st.error("Impossible de lire ce fichier Excel.")
-
     df = charger_patients()
-    if df.empty: st.warning("Aucun patient enregistré en base de données.")
+    if df.empty:
+     st.warning("Aucun patient enregistré en base de données.")
     else:
         col1, col2, col3, col4 = st.columns(4)
         col1.metric("Nombre patients", len(df))
