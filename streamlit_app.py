@@ -6,20 +6,30 @@ import base64
 import os
 from io import BytesIO
 from datetime import datetime
-from reportlab.lib.pagesizes import A4
-from reportlab.pdfgen import canvas
 
+# =========================================================================
+# CONFIGURATION & INITIALISATION DE LA SESSION (À METTRE EN PREMIER)
+# =========================================================================
 st.set_page_config(page_title="PCCT Intelligent System", layout="wide")
+
+if "connecte" not in st.session_state:
+    st.session_state.connecte = False
+if "role" not in st.session_state:
+    st.session_state.role = ""
+if "nom_utilisateur" not in st.session_state:
+    st.session_state.nom_utilisateur = ""
 
 DB_NAME = "patients_pcct.db"
 
+# =========================================================================
+# FONCTIONS GLOBALES (BACKGROUND & STYLES)
+# =========================================================================
 def get_base64_image(path):
-    if not os.path.exists(path):
-        return ""
-    with open(path, "rb") as f:
-        return base64.b64encode(f.read()).decode()
-
-
+    """Fonction unique et sécurisée pour encoder les images de fond en Base64"""
+    if not path or not os.path.exists(path):
+        return ""
+    with open(path, "rb") as f:
+        return base64.b64encode(f.read()).decode()
 # =========================
 # PAGE LOGIN
 # =========================
