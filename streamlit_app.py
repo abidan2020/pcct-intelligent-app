@@ -614,24 +614,24 @@ elif menu == "Maintenance":
     set_bg("maintenance.png")
     st.title("Maintenance prédictive du scanner PCCT")
 
-    # --- MODIFICATION ICI : Chargement dynamique des scanners ---
+    # --- CORRECTION ICI ---
     df_scanners_existants = charger_scanners()
     
-    # On vérifie si on a des scanners enregistrés
-    if not df_scanners_existants.empty and "Nom" in df_scanners_existants.columns:
-        # On extrait la colonne contenant les noms (adaptez "Nom" selon le nom exact de votre colonne)
-        liste_scanners = df_scanners_existants["Nom"].tolist()
+    # On vérifie si le tableau n'est pas vide et contient au moins une colonne
+    if not df_scanners_existants.empty and len(df_scanners_existants.columns) > 0:
+        # iloc[:, 0] permet de récupérer la 1ère colonne du tableau, peu importe son nom ("Nom", "nom_scanner", etc.)
+        liste_scanners = df_scanners_existants.iloc[:, 0].tolist()
     else:
-        # Liste de secours si aucun scanner n'est encore enregistré
+        # Liste de secours si la base de données est réellement vide
         liste_scanners = ["Aucun scanner enregistré - Créez-en un dans 'Gestion'"]
-    # -----------------------------------------------------------
+    # ----------------------
 
     col1, col2 = st.columns(2)
 
     with col1:
-        # --- MODIFICATION ICI : Remplacement de la liste fixe par la liste dynamique ---
+        # Utilisation de la liste dynamique corrigée
         scanner = st.selectbox("Scanner concerné", liste_scanners)
-        # -----------------------------------------------------------
+        
         snr_sys = st.number_input("SNR système", min_value=0.0, max_value=100.0, value=0.0)
         temperature = st.number_input("Température du tube RX (°C)", min_value=0.0, max_value=150.0, value=0.0)
         vibration = st.slider("Vibration du gantry (%)", 0, 100, 0)
