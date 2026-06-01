@@ -88,45 +88,6 @@ if not st.session_state.connecte:
     page_login()
     st.stop()
   import streamlit as st
-
-# =========================
-# BACKGROUND GLOBAL
-# =========================
-st.markdown(
-    """
-    <style>
-
-    /* Background image */
-    .stApp {
-        background-image: url("https://images.unsplash.com/photo-1581091012184-7c6a6b1a2c7a");
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-    }
-
-    /* Overlay sombre pour lisibilité */
-    .stApp::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.55);
-        z-index: 0;
-    }
-
-    /* S'assurer que le contenu est au-dessus */
-    .block-container {
-        position: relative;
-        z-index: 2;
-    }
-
-    </style>
-    """,
-    unsafe_allow_html=True
-)  
-
 # =========================
 # BACKGROUND
 # =========================
