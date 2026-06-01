@@ -12,7 +12,6 @@ from reportlab.pdfgen import canvas
 st.set_page_config(page_title="PCCT Intelligent System", layout="wide")
 
 DB_NAME = "patients_pcct.db"
-
 # =========================
 # LOGIN
 # =========================
@@ -87,7 +86,8 @@ def page_login():
 if not st.session_state.connecte:
     page_login()
     st.stop()
-  import streamlit as st
+
+
 # =========================
 # BACKGROUND
 # =========================
