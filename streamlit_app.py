@@ -25,7 +25,7 @@ if "role" not in st.session_state:
 if "nom_utilisateur" not in st.session_state:
     st.session_state.nom_utilisateur = ""
 
-def page_login():
+ def page_login():
     # --- CHARGEMENT DE TON IMAGE "login.png" ---
     img_login = get_base64_image("login.png")
     bg_css = ""
