@@ -25,31 +25,10 @@ if "role" not in st.session_state:
 if "nom_utilisateur" not in st.session_state:
     st.session_state.nom_utilisateur = ""
 
- def page_login():
-    # --- CHARGEMENT DE TON IMAGE "login.png" ---
-    img_login = get_base64_image("login.png")
-    bg_css = ""
-    if img_login:
-        bg_css = f"""
-        background: linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.85)),
-                    url("data:image/png;base64,{img_login}");
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-        """
-    else:
-        # Couleur de secours si l'image "login.png" n'est pas dans le dossier
-        bg_css = "background-color: #03111f;"
-    # -------------------------------------------
-
-    st.markdown(f"""
+def page_login():
+    st.markdown("""
     <style>
-    .stApp {{
-        {bg_css}
-    }}
-
-    .login-box {{
+    .login-box {
         background: rgba(5,20,35,0.90);
         padding: 35px;
         border-radius: 22px;
@@ -57,9 +36,9 @@ if "nom_utilisateur" not in st.session_state:
         box-shadow: 0 0 25px rgba(0,0,0,0.55);
         text-align: center;
         margin-top: 60px;
-    }}
+    }
 
-    .promamec-bar {{
+    .promamec-bar {
         border: 1px solid rgba(14,165,233,0.35);
         border-radius: 25px;
         padding: 18px;
@@ -69,15 +48,13 @@ if "nom_utilisateur" not in st.session_state:
         font-weight: 800;
         color: #0ea5e9;
         background: rgba(7,25,43,0.55);
-    }}
+    }
     </style>
     """, unsafe_allow_html=True)
 
     col1, col2, col3 = st.columns([1, 1.4, 1])
 
     with col2:
-        st.markdown('<div class="login-box">', unsafe_allow_html=True)
-        
         st.markdown(
             '<div class="promamec-bar">PROMAMEC : Healthcare Experts</div>',
             unsafe_allow_html=True
