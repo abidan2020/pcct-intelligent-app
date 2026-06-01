@@ -614,10 +614,24 @@ elif menu == "Maintenance":
     set_bg("maintenance.png")
     st.title("Maintenance prédictive du scanner PCCT")
 
+    # --- MODIFICATION ICI : Chargement dynamique des scanners ---
+    df_scanners_existants = charger_scanners()
+    
+    # On vérifie si on a des scanners enregistrés
+    if not df_scanners_existants.empty and "Nom" in df_scanners_existants.columns:
+        # On extrait la colonne contenant les noms (adaptez "Nom" selon le nom exact de votre colonne)
+        liste_scanners = df_scanners_existants["Nom"].tolist()
+    else:
+        # Liste de secours si aucun scanner n'est encore enregistré
+        liste_scanners = ["Aucun scanner enregistré - Créez-en un dans 'Gestion'"]
+    # -----------------------------------------------------------
+
     col1, col2 = st.columns(2)
 
     with col1:
-        scanner = st.selectbox("Scanner concerné", ["Scanner PCCT-01", "Scanner PCCT-02", "Scanner PCCT-03"])
+        # --- MODIFICATION ICI : Remplacement de la liste fixe par la liste dynamique ---
+        scanner = st.selectbox("Scanner concerné", liste_scanners)
+        # -----------------------------------------------------------
         snr_sys = st.number_input("SNR système", min_value=0.0, max_value=100.0, value=0.0)
         temperature = st.number_input("Température du tube RX (°C)", min_value=0.0, max_value=150.0, value=0.0)
         vibration = st.slider("Vibration du gantry (%)", 0, 100, 0)
@@ -712,6 +726,7 @@ elif menu == "Maintenance":
 
     st.bar_chart(df_graph.set_index("Paramètre"))
 
+
 # =========================
 # GESTION SCANNERS
 # =========================
@@ -749,6 +764,8 @@ elif menu == "Gestion scanners":
 
             if ok:
                 st.success("Scanner ajouté avec succès.")
+                # Optionnel : Forcer le rafraîchissement pour que la maintenance voit le nouveau scanner immédiatement
+                st.rerun() 
             else:
                 st.warning("Ce numéro de série existe déjà.")
 
@@ -760,7 +777,6 @@ elif menu == "Gestion scanners":
         st.info("Aucun scanner enregistré.")
     else:
         st.dataframe(df_scanners, use_container_width=True)
-
 # =========================
 # DASHBOARD
 # =========================
