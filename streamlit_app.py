@@ -485,7 +485,6 @@ st.sidebar.title("PCCT Intelligent System")
 st.sidebar.write(f"Utilisateur : {st.session_state.nom_utilisateur}")
 st.sidebar.write(f"Rôle : {st.session_state.role}")
 
-if st.sidebar.button("Déconnexion"):
 if st.session_state.role == "Technicien de radiologie":
      menu = st.sidebar.radio(
         "Navigation",
