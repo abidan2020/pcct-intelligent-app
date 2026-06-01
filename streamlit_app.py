@@ -726,50 +726,58 @@ elif menu == "Maintenance":
 
     st.bar_chart(df_graph.set_index("Paramètre"))
 
-
 # =========================
 # GESTION SCANNERS
 # =========================
 elif menu == "Gestion scanners":
     st.title("Gestion du parc scanner")
 
-    st.write("Ajouter un nouveau scanner")
+    # --- MODIFICATION ACCÈS BIOMÉDICAL ---
+    if st.session_state.role == "Ingénieure biomédicale":
+        st.write("### Ajouter un nouveau scanner")
 
-    col1, col2 = st.columns(2)
+        col1, col2 = st.columns(2)
 
-    with col1:
-        nom_scanner = st.text_input("Nom du scanner")
-        marque = st.text_input("Marque", value="Neusoft")
-        modele = st.text_input("Modèle")
-        numero_serie = st.text_input("Numéro de série")
+        with col1:
+            nom_scanner = st.text_input("Nom du scanner")
+            marque = st.text_input("Marque", value="Neusoft")
+            modele = st.text_input("Modèle")
+            numero_serie = st.text_input("Numéro de série")
 
-    with col2:
-        localisation = st.text_input("Localisation")
-        date_installation = st.date_input("Date d’installation")
-        etat_initial = st.selectbox("État initial", ["Stable", "À surveiller", "Critique"])
+        with col2:
+            localisation = st.text_input("Localisation")
+            date_installation = st.date_input("Date d’installation")
+            etat_initial = st.selectbox("État initial", ["Stable", "À surveiller", "Critique"])
 
-    if st.button("Ajouter le scanner"):
-        if nom_scanner == "" or numero_serie == "":
-            st.error("Veuillez compléter les informations.")
-        else:
-            ok = ajouter_scanner(
-                nom_scanner,
-                marque,
-                modele,
-                numero_serie,
-                localisation,
-                str(date_installation),
-                etat_initial
-            )
-
-            if ok:
-                st.success("Scanner ajouté avec succès.")
-                # Optionnel : Forcer le rafraîchissement pour que la maintenance voit le nouveau scanner immédiatement
-                st.rerun() 
+        if st.button("Ajouter le scanner"):
+            if nom_scanner == "" or numero_serie == "":
+                st.error("Veuillez compléter les informations.")
             else:
-                st.warning("Ce numéro de série existe déjà.")
+                ok = ajouter_scanner(
+                    nom_scanner,
+                    marque,
+                    modele,
+                    numero_serie,
+                    localisation,
+                    str(date_installation),
+                    etat_initial
+                )
 
-    st.write("Liste des scanners")
+                if ok:
+                    st.success("Scanner ajouté avec succès.")
+                    st.rerun() 
+                else:
+                    st.warning("Ce numéro de série existe déjà.")
+                    
+        st.markdown("---") # Ligne de séparation
+        
+    else:
+        # Message affiché si un Technicien (ou autre) tente d'accéder à l'ajout
+        st.warning("🔒 Droits insuffisants. Seul un membre du service biomédical peut ajouter du matériel au parc.")
+    # --------------------------------------
+
+    # Cette partie reste visible par tout le monde (Lecture seule de la liste du parc)
+    st.write("### Liste des scanners installés")
 
     df_scanners = charger_scanners()
 
@@ -777,6 +785,7 @@ elif menu == "Gestion scanners":
         st.info("Aucun scanner enregistré.")
     else:
         st.dataframe(df_scanners, use_container_width=True)
+
 # =========================
 # DASHBOARD
 # =========================
