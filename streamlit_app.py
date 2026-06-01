@@ -7,10 +7,7 @@ import pandas as pd
 import numpy as np
 import sqlite3
 import os
-from io import BytesIO
 from datetime import datetime
-from reportlab.lib.pagesizes import A4
-from reportlab.pdfgen import canvas
 
 # =========================================================
 # CONFIG
@@ -21,60 +18,62 @@ st.set_page_config(
     layout="wide"
 )
 
-DB_NAME = "pcct_promamec.db"
 LOGO_PATH = "imagespromamec.png"
+DB_NAME = "pcct_promamec.db"
 
 # =========================================================
-# STYLE PROMAMEC
+# STYLE GLOBAL
 # =========================================================
 
 st.markdown("""
 <style>
 
-:root {
-    --promamec: #00A99D;
-    --promamec-dark: #007E75;
-    --text-dark: #1F2933;
-    --bg-light: #F7FAFA;
-    --white: #FFFFFF;
-    --border: #E5E7EB;
+:root{
+    --promamec:#00A99D;
+    --promamec-dark:#00857C;
+    --text:#1F2933;
+    --bg:#F7FAFA;
+    --border:#E5E7EB;
 }
 
-.stApp {
-    background: var(--bg-light);
-    color: var(--text-dark);
+/* GENERAL */
+
+.stApp{
+    background:var(--bg);
 }
 
 /* SIDEBAR */
 
-[data-testid="stSidebar"] {
-    background: #ffffff;
-    border-right: 1px solid #E5E7EB;
+[data-testid="stSidebar"]{
+    background:white;
+    border-right:1px solid #E5E7EB;
 }
 
-[data-testid="stSidebar"] * {
-    color: var(--text-dark) !important;
+[data-testid="stSidebar"] *{
+    color:#1F2933 !important;
 }
 
 /* TITRES */
 
-h1, h2, h3 {
-    color: var(--text-dark) !important;
-    font-weight: 800 !important;
+h1,h2,h3,h4{
+    color:#1F2933 !important;
+    font-weight:800 !important;
 }
 
-/* CARTES */
+/* CARD */
 
-.card {
-    background: white;
-    padding: 28px;
-    border-radius: 12px;
-    border: 1px solid var(--border);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
-    margin-bottom: 22px;
+.card{
+    background:white;
+    padding:25px;
+    border-radius:14px;
+    border:1px solid #E5E7EB;
+    box-shadow:0 6px 20px rgba(0,0,0,0.06);
+    margin-bottom:20px;
 }
 
-.hero-card {
+/* HERO */
+
+.hero{
     background:
     linear-gradient(
         rgba(0,0,0,0.45),
@@ -82,75 +81,53 @@ h1, h2, h3 {
     ),
     url("https://images.unsplash.com/photo-1584515933487-779824d29309");
 
-    background-size: cover;
-    background-position: center;
+    background-size:cover;
+    background-position:center;
 
-    padding: 90px 60px;
+    border-radius:18px;
 
-    border-radius: 12px;
+    padding:90px 60px;
 
-    margin-bottom: 30px;
+    margin-bottom:30px;
 }
 
-.hero-card h1 {
-    color: white !important;
-    font-size: 42px !important;
+.hero h1{
+    color:white !important;
+    font-size:42px !important;
 }
 
-.hero-card p {
-    color: white !important;
-    font-size: 18px;
+.hero p{
+    color:white !important;
+    font-size:18px;
 }
 
-/* BOUTONS */
+/* BUTTON */
 
-.stButton > button {
-
-    background: var(--promamec);
-
-    color: white !important;
-
-    border: none;
-
-    border-radius: 6px;
-
-    font-weight: 700;
+.stButton > button{
+    background:#00A99D;
+    color:white !important;
+    border:none;
+    border-radius:6px;
+    font-weight:700;
 }
 
-.stButton > button:hover {
-
-    background: var(--promamec-dark);
-
-    color: white !important;
+.stButton > button:hover{
+    background:#00857C;
+    color:white !important;
 }
 
-/* METRICS */
+/* METRIC */
 
-[data-testid="stMetric"] {
-
-    background: white;
-
-    border-radius: 10px;
-
-    padding: 18px;
-
-    border-top: 4px solid var(--promamec);
-
-    box-shadow:
-    0 4px 14px rgba(0,0,0,0.06);
+[data-testid="stMetric"]{
+    background:white;
+    border-radius:10px;
+    padding:18px;
+    border-top:4px solid #00A99D;
+    box-shadow:0 4px 12px rgba(0,0,0,0.05);
 }
 
-[data-testid="stMetric"] * {
-    color: var(--text-dark) !important;
-}
-
-/* INPUTS */
-
-input, textarea, select {
-
-    color: var(--text-dark) !important;
-
-    background: white !important;
+[data-testid="stMetric"] *{
+    color:#1F2933 !important;
 }
 
 </style>
@@ -175,33 +152,75 @@ if "nom_utilisateur" not in st.session_state:
 
 def login():
 
-    col1, col2, col3 = st.columns([1,1.4,1])
+    st.markdown("""
+    <style>
 
-    with col2:
+    .login-container{
+        display:flex;
+        height:100vh;
+        margin-top:-80px;
+    }
+
+    .left-login{
+        flex:1.2;
+        background:white;
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        padding:60px;
+    }
+
+    .right-login{
+        flex:0.5;
+        background:#00A99D;
+    }
+
+    .login-card{
+        width:100%;
+        max-width:420px;
+        background:white;
+        padding:40px;
+        border-radius:14px;
+        box-shadow:0 8px 30px rgba(0,0,0,0.08);
+    }
+
+    .login-title{
+        font-size:38px;
+        font-weight:800;
+        color:#1F2933;
+        margin-top:20px;
+        margin-bottom:5px;
+    }
+
+    .login-subtitle{
+        color:#6B7280;
+        margin-bottom:35px;
+        font-size:16px;
+    }
+
+    </style>
+    """, unsafe_allow_html=True)
+
+    col1, col2 = st.columns([3,1])
+
+    with col1:
+
+        st.markdown('<div class="login-card">', unsafe_allow_html=True)
+
+        if os.path.exists(LOGO_PATH):
+            st.image(LOGO_PATH, width=230)
 
         st.markdown(
-            '<div class="card">',
+            '<div class="login-title">Connexion</div>',
             unsafe_allow_html=True
         )
 
-        if os.path.exists(LOGO_PATH):
-
-            st.image(
-                LOGO_PATH,
-                width=240
-            )
-
-        st.title(
-            "PCCT Intelligent System"
+        st.markdown(
+            '<div class="login-subtitle">PROMAMEC PCCT Intelligent System</div>',
+            unsafe_allow_html=True
         )
 
-        st.subheader(
-            "Connexion sécurisée"
-        )
-
-        nom = st.text_input(
-            "Nom utilisateur"
-        )
+        nom = st.text_input("Nom utilisateur")
 
         identifiant = st.text_input(
             "ID utilisateur",
@@ -236,19 +255,21 @@ def login():
 
             else:
 
-                st.error(
-                    "Nom ou ID incorrect."
-                )
+                st.error("Nom ou ID incorrect.")
 
-        st.markdown(
-            '</div>',
-            unsafe_allow_html=True
-        )
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with col2:
+        st.markdown("""
+        <div style="
+        background:#00A99D;
+        height:100vh;
+        border-radius:0px;">
+        </div>
+        """, unsafe_allow_html=True)
 
 if not st.session_state.connecte:
-
     login()
-
     st.stop()
 
 # =========================================================
@@ -267,80 +288,29 @@ def init_db():
 
         id INTEGER PRIMARY KEY AUTOINCREMENT,
 
-        date TEXT,
-
         nom TEXT,
         prenom TEXT,
-        cin TEXT UNIQUE,
-
+        cin TEXT,
         sexe TEXT,
-        age INTEGER,
 
+        age INTEGER,
         poids REAL,
         taille REAL,
 
-        type_examen TEXT,
-        protocole TEXT,
-
         imc REAL,
-        classe_imc TEXT,
-
         dose REAL,
         snr REAL,
 
-        qualite_image TEXT,
-
-        kvp INTEGER,
-        mas INTEGER,
-
-        ctdi REAL,
-        dlp REAL,
+        examen TEXT,
+        protocole TEXT,
 
         scanner TEXT,
-        marque TEXT,
-        modele TEXT,
-        numero_serie TEXT,
-
-        recommandation TEXT
-    )
-
-    """)
-
-    c.execute("""
-
-    CREATE TABLE IF NOT EXISTS maintenance (
-
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-
-        date TEXT,
-
-        scanner TEXT,
-        marque TEXT,
-        modele TEXT,
-        numero_serie TEXT,
-
-        snr_systeme REAL,
-        temperature REAL,
-        vibration REAL,
-        bruit REAL,
-
-        heures INTEGER,
-
-        detecteurs TEXT,
-        refroidissement TEXT,
-
-        score REAL,
-        etat TEXT,
-
-        composant TEXT,
-        cause TEXT,
-        action TEXT
+        date TEXT
     )
 
     """)
 
     conn.commit()
-
     conn.close()
 
 init_db()
@@ -351,76 +321,37 @@ init_db()
 
 SCANNERS = {
 
-    "NS-PCCT-2026-001": {
-
+    "NS-PCCT-2026-001":{
         "nom":"Scanner PCCT-01",
         "marque":"Neusoft",
-        "modele":"NeuViz Glory PCCT"
+        "modele":"NeuViz Glory"
     },
 
-    "NS-PCCT-2026-002": {
-
+    "NS-PCCT-2026-002":{
         "nom":"Scanner PCCT-02",
         "marque":"Neusoft",
         "modele":"NeuViz Prime"
     },
 
-    "NS-PCCT-2026-003": {
-
+    "NS-PCCT-2026-003":{
         "nom":"Scanner PCCT-03",
         "marque":"Neusoft",
         "modele":"NeuViz Epoch"
     }
 }
 
-EXAMENS = [
-
-    "Scanner cérébral",
-    "Scanner thoracique",
-    "Scanner abdominal",
-    "Scanner cardiaque",
-    "Scanner pulmonaire",
-    "Scanner osseux",
-    "Scanner pelvien"
-]
-
-PROTOCOLES = [
-
-    "Standard",
-    "Low Dose",
-    "Pédiatrique",
-    "Cardiaque",
-    "Trauma"
-]
-
 # =========================================================
-# FONCTIONS
+# CALCULS
 # =========================================================
 
 def calcul_imc(poids, taille):
 
-    if taille <= 0:
-        return 0
-
-    return poids / ((taille / 100) ** 2)
-
-def classe_imc(imc):
-
-    if imc < 18.5:
-        return "Maigreur"
-
-    elif imc < 25:
-        return "Normal"
-
-    elif imc < 30:
-        return "Surpoids"
-
-    return "Obésité"
+    return poids / ((taille/100)**2)
 
 def calcul_dose(age, imc):
 
     return round(
-        12 + (imc * 0.25) + (age * 0.03),
+        12 + (imc*0.25) + (age*0.03),
         2
     )
 
@@ -428,69 +359,11 @@ def calcul_snr(age, imc, dose):
 
     return round(
         60
-        - (0.30 * imc)
-        - (0.05 * age)
-        + (0.70 * dose),
+        - (0.30*imc)
+        - (0.05*age)
+        + (0.70*dose),
         2
     )
-
-def qualite_image(snr):
-
-    if snr >= 70:
-        return "Excellente"
-
-    elif snr >= 55:
-        return "Bonne"
-
-    elif snr >= 50:
-        return "Acceptable"
-
-    return "Insuffisante"
-
-def maintenance_scanner(numero_serie):
-
-    if numero_serie == "NS-PCCT-2026-001":
-
-        return {
-
-            "snr":65,
-            "temp":45,
-            "vibration":15,
-            "bruit":18,
-            "heures":8500,
-            "detecteurs":"Stable",
-            "refroidissement":"Normal",
-            "etat":"Stable",
-            "couleur":"🟢"
-        }
-
-    elif numero_serie == "NS-PCCT-2026-002":
-
-        return {
-
-            "snr":48,
-            "temp":68,
-            "vibration":42,
-            "bruit":45,
-            "heures":22000,
-            "detecteurs":"Légère dégradation",
-            "refroidissement":"À surveiller",
-            "etat":"À surveiller",
-            "couleur":"🟠"
-        }
-
-    return {
-
-        "snr":38,
-        "temp":86,
-        "vibration":75,
-        "bruit":70,
-        "heures":36000,
-        "detecteurs":"Dégradation importante",
-        "refroidissement":"Défaillant",
-        "etat":"Critique",
-        "couleur":"🔴"
-    }
 
 # =========================================================
 # SIDEBAR
@@ -500,7 +373,7 @@ if os.path.exists(LOGO_PATH):
 
     st.sidebar.image(
         LOGO_PATH,
-        width=170
+        width=180
     )
 
 st.sidebar.markdown("## PROMAMEC")
@@ -516,33 +389,24 @@ st.sidebar.write(
 if st.sidebar.button("Déconnexion"):
 
     st.session_state.connecte = False
-
     st.rerun()
 
-if (
-    st.session_state.role
-    == "Technicien de radiologie"
-):
+if st.session_state.role == "Technicien de radiologie":
 
     pages = [
-
         "Accueil",
         "Workflow acquisition",
         "Analyse SNR",
-        "Dashboard",
-        "Rapport"
+        "Dashboard"
     ]
 
 else:
 
     pages = [
-
         "Accueil",
         "Maintenance préventive",
         "Maintenance scanner",
-        "Dashboard",
-        "Logs système",
-        "Rapport"
+        "Dashboard"
     ]
 
 menu = st.sidebar.radio(
@@ -558,7 +422,7 @@ if menu == "Accueil":
 
     st.markdown("""
 
-    <div class="hero-card">
+    <div class="hero">
 
     <h1>
     Système intelligent pour
@@ -634,9 +498,7 @@ if menu == "Accueil":
 
 elif menu == "Workflow acquisition":
 
-    st.title(
-        "Workflow acquisition patient"
-    )
+    st.title("Workflow acquisition patient")
 
     col1, col2 = st.columns(2)
 
@@ -674,14 +536,23 @@ elif menu == "Workflow acquisition":
             0.0
         )
 
-        type_examen = st.selectbox(
+        examen = st.selectbox(
             "Type examen",
-            EXAMENS
+            [
+                "Scanner cérébral",
+                "Scanner thoracique",
+                "Scanner abdominal",
+                "Scanner cardiaque"
+            ]
         )
 
         protocole = st.selectbox(
             "Protocole",
-            PROTOCOLES
+            [
+                "Standard",
+                "Low Dose",
+                "Pédiatrique"
+            ]
         )
 
         numero_serie = st.text_input(
@@ -692,11 +563,9 @@ elif menu == "Workflow acquisition":
 
         sc = SCANNERS[numero_serie]
 
-        st.success(
-            "Scanner reconnu"
-        )
+        st.success("Scanner reconnu")
 
-        c1, c2, c3 = st.columns(3)
+        c1,c2,c3 = st.columns(3)
 
         c1.metric(
             "Marque",
@@ -715,9 +584,7 @@ elif menu == "Workflow acquisition":
 
     elif numero_serie != "":
 
-        st.error(
-            "Scanner non reconnu"
-        )
+        st.error("Scanner non reconnu")
 
     if st.button("Lancer acquisition IA"):
 
@@ -772,11 +639,7 @@ elif menu == "Workflow acquisition":
                 dose
             )
 
-            qualite = qualite_image(
-                snr
-            )
-
-            r1, r2, r3, r4 = st.columns(4)
+            r1,r2,r3 = st.columns(3)
 
             r1.metric(
                 "IMC",
@@ -793,20 +656,13 @@ elif menu == "Workflow acquisition":
                 snr
             )
 
-            r4.metric(
-                "Qualité image",
-                qualite
-            )
-
 # =========================================================
 # ANALYSE SNR
 # =========================================================
 
 elif menu == "Analyse SNR":
 
-    st.title(
-        "Analyse SNR"
-    )
+    st.title("Analyse SNR")
 
     imc = st.slider(
         "IMC",
@@ -851,26 +707,29 @@ elif menu == "Analyse SNR":
 
 elif menu == "Maintenance préventive":
 
-    st.title(
-        "Maintenance préventive"
+    st.title("Maintenance préventive")
+
+    data = [
+
+        ["PCCT-01","Stable",65,45],
+        ["PCCT-02","À surveiller",48,68],
+        ["PCCT-03","Critique",38,86]
+    ]
+
+    df = pd.DataFrame(
+
+        data,
+
+        columns=[
+            "Scanner",
+            "État",
+            "SNR",
+            "Température"
+        ]
     )
 
-    rows = []
-
-    for serial in SCANNERS:
-
-        m = maintenance_scanner(serial)
-
-        rows.append({
-
-            "Scanner":serial,
-            "État":m["etat"],
-            "SNR":m["snr"],
-            "Température":m["temp"]
-        })
-
     st.dataframe(
-        pd.DataFrame(rows),
+        df,
         use_container_width=True
     )
 
@@ -880,9 +739,7 @@ elif menu == "Maintenance préventive":
 
 elif menu == "Maintenance scanner":
 
-    st.title(
-        "Maintenance scanner"
-    )
+    st.title("Maintenance scanner")
 
     numero_serie = st.text_input(
         "Entrer numéro série scanner"
@@ -902,57 +759,54 @@ elif menu == "Maintenance scanner":
 
     else:
 
-        m = maintenance_scanner(
-            numero_serie
-        )
+        if numero_serie == "NS-PCCT-2026-001":
 
-        sc = SCANNERS[numero_serie]
+            snr = 65
+            temp = 45
+            vib = 15
+            bruit = 18
+            etat = "🟢 Stable"
 
-        st.success(
-            "Scanner reconnu"
-        )
+        elif numero_serie == "NS-PCCT-2026-002":
 
-        c1,c2,c3 = st.columns(3)
+            snr = 48
+            temp = 68
+            vib = 42
+            bruit = 45
+            etat = "🟠 À surveiller"
+
+        else:
+
+            snr = 38
+            temp = 86
+            vib = 75
+            bruit = 70
+            etat = "🔴 Critique"
+
+        c1,c2,c3,c4 = st.columns(4)
 
         c1.metric(
-            "Marque",
-            sc["marque"]
+            "SNR système",
+            snr
         )
 
         c2.metric(
-            "Modèle",
-            sc["modele"]
+            "Température",
+            f"{temp} °C"
         )
 
         c3.metric(
-            "État",
-            f"{m['couleur']} {m['etat']}"
-        )
-
-        st.markdown(
-            "### Paramètres techniques"
-        )
-
-        a1,a2,a3,a4 = st.columns(4)
-
-        a1.metric(
-            "SNR système",
-            m["snr"]
-        )
-
-        a2.metric(
-            "Température",
-            f"{m['temp']} °C"
-        )
-
-        a3.metric(
             "Vibration",
-            f"{m['vibration']} %"
+            f"{vib} %"
         )
 
-        a4.metric(
+        c4.metric(
             "Bruit image",
-            f"{m['bruit']} %"
+            f"{bruit} %"
+        )
+
+        st.success(
+            f"État global : {etat}"
         )
 
 # =========================================================
@@ -961,9 +815,7 @@ elif menu == "Maintenance scanner":
 
 elif menu == "Dashboard":
 
-    st.title(
-        "Dashboard global"
-    )
+    st.title("Dashboard global")
 
     data = {
 
@@ -995,51 +847,4 @@ elif menu == "Dashboard":
 
     st.bar_chart(
         df.set_index("Scanner")
-    )
-
-# =========================================================
-# LOGS SYSTEME
-# =========================================================
-
-elif menu == "Logs système":
-
-    st.title(
-        "Logs système"
-    )
-
-    logs = [
-
-        "[12:05] Scanner connecté",
-
-        "[12:07] Analyse SNR effectuée",
-
-        "[12:08] Température élevée détectée",
-
-        "[12:09] Maintenance préventive recommandée"
-    ]
-
-    for log in logs:
-
-        st.markdown(f"""
-
-        <div class="card">
-
-        {log}
-
-        </div>
-
-        """, unsafe_allow_html=True)
-
-# =========================================================
-# RAPPORT
-# =========================================================
-
-elif menu == "Rapport":
-
-    st.title(
-        "Rapports"
-    )
-
-    st.info(
-        "Module rapport PDF / Excel prêt."
     )
