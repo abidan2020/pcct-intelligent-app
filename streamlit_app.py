@@ -486,24 +486,38 @@ st.sidebar.write(f"Utilisateur : {st.session_state.nom_utilisateur}")
 st.sidebar.write(f"Rôle : {st.session_state.role}")
 
 if st.sidebar.button("Déconnexion"):
-    st.session_state.connecte = False
-    st.session_state.role = ""
-    st.session_state.nom_utilisateur = ""
-    st.rerun()
+# =========================
+# MENU SELON LE RÔLE
+# =========================
 
-menu = st.sidebar.radio(
-    "Navigation",
-    [
-        "Accueil",
-        "Technicien",
-        "SNR",
-        "Maintenance",
-        "Gestion scanners",
-        "Dashboard",
-        "Validation",
-        "Rapport"
-    ]
-)
+if st.session_state.role == "Technicien de radiologie":
+
+    menu = st.sidebar.radio(
+        "Navigation",
+        [
+            "Accueil",
+            "Technicien",
+            "SNR",
+            "Dashboard",
+            "Validation",
+            "Rapport"
+        ]
+    )
+
+else:
+
+    menu = st.sidebar.radio(
+        "Navigation",
+        [
+            "Accueil",
+            "Maintenance",
+            "Gestion scanners",
+            "Dashboard",
+            "Validation",
+            "Rapport"
+        ]
+    )    
+
 
 # =========================
 # ACCUEIL
