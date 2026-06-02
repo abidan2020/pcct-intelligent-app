@@ -208,7 +208,7 @@ def ajouter_patient(patient):
             poids, taille, imc, classe_imc, dose, snr,
             kvp, mas, ctdivol, dlp, recommandation
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             patient["Date"], patient["Nom"], patient["Prénom"], patient["CIN"],
             patient["Sexe"], patient["Type examen"], patient["Age"],
@@ -531,65 +531,71 @@ elif menu == "Technicien":
     set_bg("technicien.png")
     st.title("Espace Technicien")
 
-    col1, col2 = st.columns(2)
+    # --- SÉCURITÉ ET DROITS D'ACCÈS EXCLUSIFS POUR LE TECHNICIEN ---
+    if st.session_state.role == "Technicien de radiologie":
+        
+        col1, col2 = st.columns(2)
 
-    with col1:
-       
-        nom = st.text_input("Nom")
-        prenom = st.text_input("Prénom")
-        cin = st.text_input("CIN")
-        sexe = st.selectbox("Sexe", ["Homme", "Femme"])
-        type_examen = st.selectbox("Type d'examen", examens)
+        with col1:
+            nom = st.text_input("Nom")
+            prenom = st.text_input("Prénom")
+            cin = st.text_input("CIN")
+            sexe = st.selectbox("Sexe", ["Homme", "Femme"])
+            type_examen = st.selectbox("Type d'examen", examens)
 
-        age = st.number_input("Âge", min_value=0, max_value=120, value=0)
-        poids = st.number_input("Poids (kg)", min_value=0.0, max_value=200.0, value=0.0)
-        taille = st.number_input("Taille (cm)", min_value=0.0, max_value=220.0, value=0.0)
+            age = st.number_input("Âge", min_value=0, max_value=120, value=0)
+            poids = st.number_input("Poids (kg)", min_value=0.0, max_value=200.0, value=0.0)
+            taille = st.number_input("Taille (cm)", min_value=0.0, max_value=220.0, value=0.0)
 
-        bouton = st.button("Calculer et enregistrer")
+            bouton = st.button("Calculer et enregistrer")
 
-    if age > 0 and poids > 0 and taille > 0:
-        patient = creer_patient(nom, prenom, cin, sexe, type_examen, age, poids, taille)
+        if age > 0 and poids > 0 and taille > 0:
+            patient = creer_patient(nom, prenom, cin, sexe, type_examen, age, poids, taille)
 
-        with col2:
-            st.metric("IMC", patient["IMC"])
-            st.metric("Classe IMC", patient["Classe IMC"])
-            st.metric("Dose recommandée", f"{patient['Dose']} mGy")
-            st.metric("SNR estimé", patient["SNR"])
-            st.metric("kVp recommandé", patient["kVp"])
-            st.metric("mAs recommandé", patient["mAs"])
-            st.metric("CTDIvol", f"{patient['CTDIvol']} mGy")
-            st.metric("DLP", f"{patient['DLP']} mGy.cm")
+            with col2:
+                st.metric("IMC", patient["IMC"])
+                st.metric("Classe IMC", patient["Classe IMC"])
+                st.metric("Dose recommandée", f"{patient['Dose']} mGy")
+                st.metric("SNR estimé", patient["SNR"])
+                st.metric("kVp recommandé", patient["kVp"])
+                st.metric("mAs recommandé", patient["mAs"])
+                st.metric("CTDIvol", f"{patient['CTDIvol']} mGy")
+                st.metric("DLP", f"{patient['DLP']} mGy.cm")
 
-            if patient["SNR"] >= 50:
-                st.success("Qualité image acceptable")
-            else:
-                st.error("SNR insuffisant")
+                if patient["SNR"] >= 50:
+                    st.success("Qualité image acceptable")
+                else:
+                    st.error("SNR insuffisant")
 
-            st.info(patient["Recommandation"])
-    else:
-        patient = None
-        with col2:
-            st.metric("IMC", 0)
-            st.metric("Classe IMC", "Non calculé")
-            st.metric("Dose recommandée", "0 mGy")
-            st.metric("SNR estimé", 0)
-            st.metric("kVp recommandé", 0)
-            st.metric("mAs recommandé", 0)
-            st.metric("CTDIvol", "0 mGy")
-            st.metric("DLP", "0 mGy.cm")
-            st.warning("Veuillez entrer les informations du patient pour lancer le calcul.")
-
-    if bouton:
-        if cin.strip() == "":
-            st.error("Veuillez entrer le CIN.")
-        elif patient is None:
-            st.error("Veuillez entrer l'âge, le poids et la taille du patient.")
+                st.info(patient["Recommandation"])
         else:
-            ok = ajouter_patient(patient)
-            if ok:
-                st.success("Le patient a été bien enregistré.")
+            patient = None
+            with col2:
+                st.metric("IMC", 0)
+                st.metric("Classe IMC", "Non calculé")
+                st.metric("Dose recommandée", "0 mGy")
+                st.metric("SNR estimé", 0)
+                st.metric("kVp recommandé", 0)
+                st.metric("mAs recommandé", 0)
+                st.metric("CTDIvol", "0 mGy")
+                st.metric("DLP", "0 mGy.cm")
+                st.warning("Veuillez entrer les informations du patient pour lancer le calcul.")
+
+        if bouton:
+            if cin.strip() == "":
+                st.error("Veuillez entrer le CIN.")
+            elif patient is None:
+                st.error("Veuillez entrer l'âge, le poids et la taille du patient.")
             else:
-                st.warning("Ce patient est déjà enregistré avec ce CIN.")
+                ok = ajouter_patient(patient)
+                if ok:
+                    st.success("Le patient a été bien enregistré.")
+                else:
+                    st.warning("Ce patient est déjà enregistré avec ce CIN.")
+                    
+    else:
+        # Message d'interdiction si l'Ingénieure biomédicale tente d'entrer
+        st.error("⛔ Accès refusé. Conformément aux habilitations de Promamec, seul le rôle **Technicien de radiologie** dispose des droits d'accès requis pour enregistrer et calculer la dose des nouveaux patients.")
 
 # =========================
 # SNR
@@ -614,24 +620,17 @@ elif menu == "Maintenance":
     set_bg("maintenance.png")
     st.title("Maintenance prédictive du scanner PCCT")
 
-    # --- CORRECTION ICI ---
     df_scanners_existants = charger_scanners()
     
-    # On vérifie si le tableau n'est pas vide et contient au moins une colonne
     if not df_scanners_existants.empty and len(df_scanners_existants.columns) > 0:
-        # iloc[:, 0] permet de récupérer la 1ère colonne du tableau, peu importe son nom ("Nom", "nom_scanner", etc.)
         liste_scanners = df_scanners_existants.iloc[:, 0].tolist()
     else:
-        # Liste de secours si la base de données est réellement vide
         liste_scanners = ["Aucun scanner enregistré - Créez-en un dans 'Gestion'"]
-    # ----------------------
 
     col1, col2 = st.columns(2)
 
     with col1:
-        # Utilisation de la liste dynamique corrigée
         scanner = st.selectbox("Scanner concerné", liste_scanners)
-        
         snr_sys = st.number_input("SNR système", min_value=0.0, max_value=100.0, value=0.0)
         temperature = st.number_input("Température du tube RX (°C)", min_value=0.0, max_value=150.0, value=0.0)
         vibration = st.slider("Vibration du gantry (%)", 0, 100, 0)
@@ -732,7 +731,6 @@ elif menu == "Maintenance":
 elif menu == "Gestion scanners":
     st.title("Gestion du parc scanner")
 
-    # --- MODIFICATION ACCÈS BIOMÉDICAL ---
     if st.session_state.role == "Ingénieure biomédicale":
         st.write("### Ajouter un nouveau scanner")
 
@@ -769,16 +767,12 @@ elif menu == "Gestion scanners":
                 else:
                     st.warning("Ce numéro de série existe déjà.")
                     
-        st.markdown("---") # Ligne de séparation
+        st.markdown("---") 
         
     else:
-        # Message affiché si un Technicien (ou autre) tente d'accéder à l'ajout
         st.warning("🔒 Droits insuffisants. Seul un membre du service biomédical peut ajouter du matériel au parc.")
-    # --------------------------------------
 
-    # Cette partie reste visible par tout le monde (Lecture seule de la liste du parc)
     st.write("### Liste des scanners installés")
-
     df_scanners = charger_scanners()
 
     if df_scanners.empty:
@@ -967,13 +961,8 @@ elif menu == "Rapport":
         pdf_file = generer_pdf(patient)
 
         st.download_button(
-            "Télécharger rapport PDF",
+            "Télécharger le rapport PDF",
             data=pdf_file,
-            file_name=f"rapport_{patient['nom']}_{patient['prenom']}.pdf",
+            file_name=f"Rapport_{patient['nom']}_{patient['prenom']}.pdf",
             mime="application/pdf"
         )
-
-        if st.button("Supprimer ce patient"):
-            supprimer_patient(patient_id)
-            st.success("Patient supprimé.")
-            st.rerun()
