@@ -865,31 +865,46 @@ elif menu == "Dashboard":
 # =========================
 elif menu == "Validation":
     set_bg("rapport.png")
-    st.title("Validation des cas de test")
+    st.title("Validation des cas réels (Suivi Dose / SNR)")
 
-    cas_tests = [
-        ("Patient mince", "Lina", "Sara", "RED001", "Femme", "Scanner thoracique", 23, 45.0, 170.0),
-        ("Enfant", "Adam", "Youssef", "RED002", "Homme", "Scanner pulmonaire", 9, 32.0, 138.0),
-        ("Patient obèse", "Mehdi", "Rachid", "RED003", "Homme", "Scanner corps entier", 59, 145.0, 171.0),
-        ("Patient âgé", "Nadia", "Salma", "RED004", "Femme", "Scanner cardiaque", 72, 69.0, 162.0)
-    ]
+    # 1. Chargement des vrais patients depuis la base de données SQLite
+    df_dynamique = charger_patients()
 
-    rows = []
+    if df_dynamique.empty:
+        st.warning("⚠️ Aucun patient n'est encore enregistré dans la base de données. Les calculs de validation s'afficheront dès qu'un technicien aura ajouté un patient.")
+    else:
+        st.write(f"### Analyse des {len(df_dynamique)} patient(s) enregistré(s) en temps réel")
+        
+        # Préparation d'un affichage propre des colonnes clés pour la validation
+        # On renomme temporairement les colonnes pour l'affichage utilisateur
+        df_affichage = df_dynamique[[
+            "date", "nom", "prenom", "cin", "sexe", "type_examen", 
+            "age", "poids", "taille", "imc", "classe_imc", "dose", "snr", "recommandation"
+        ]].copy()
+        
+        df_affichage.columns = [
+            "Date", "Nom", "Prénom", "CIN", "Sexe", "Type Examen", 
+            "Âge", "Poids (kg)", "Taille (cm)", "IMC", "Classe IMC", "Dose (mGy)", "SNR", "Recommandation IA"
+        ]
 
-    for nom_cas, nom, prenom, cin, sexe, exam, age, poids, taille in cas_tests:
-        p = creer_patient(nom, prenom, cin, sexe, exam, age, poids, taille)
-        p["Cas test"] = nom_cas
-        rows.append(p)
+        # Affichage du tableau complet des patients issus de la BDD
+        st.dataframe(df_affichage, use_container_width=True)
 
-    df_val = pd.DataFrame(rows)
+        st.markdown("---")
+        st.subheader("📊 Graphique comparatif de Validation : Dose vs SNR")
 
-    st.dataframe(df_val, use_container_width=True)
+        # Pour le graphique, on crée une colonne d'identification (Nom + Prénom)
+        df_dynamique["Patient"] = df_dynamique["nom"] + " " + df_dynamique["prenom"]
+        
+        # Affichage du graphique en barres comparant la Dose et le SNR de chaque patient
+        st.bar_chart(df_dynamique.set_index("Patient")[["dose", "snr"]])
 
-    st.subheader("Comparaison Dose / SNR")
-    st.bar_chart(df_val.set_index("Cas test")[["Dose", "SNR"]])
-
-    st.info("Cette validation montre que la dose diminue chez les patients minces ou pédiatriques, et augmente chez les patients obèses pour maintenir un SNR acceptable.")
-
+        # Note d'interprétation clinique et biomédicale
+        st.info(
+            "💡 **Note de Validation :** Ce graphique vous permet de vérifier la cohérence du système intelligent PCCT. "
+            "Le protocole doit valider graphiquement que la dose s'adapte bien aux critères morphologiques (Poids/IMC) "
+            "et cliniques (Type d'examen) saisis par le technicien, tout en maintenant le SNR dans la zone cible acceptable."
+        )
 # =========================
 # RAPPORT
 # =========================
